@@ -30,6 +30,10 @@ install-streamlit: setup
 install-efficientnet: setup
     uv sync --group efficientnet
 
+# Установить зависимости для обучения ResNet18
+install-resnet18: setup
+    uv sync --group resnet18
+
 # Установить зависимости для EfficientNet и интерпретации результатов
 install-interpretability: setup
     uv sync --group efficientnet --group interpretability
@@ -86,6 +90,10 @@ run-yolo:
 # Запустить обучение EfficientNet
 train-efficientnet:
     uv run --group efficientnet python models/efficientNet/train_efficientnet.py
+
+# Запустить обучение ResNet18
+train-resnet18 EPOCHS="30":
+    uv run --group resnet18 python models/resnet18/train_resnet18.py --epochs {{EPOCHS}}
 
 # Построить Grad-CAM для EfficientNet
 grad-cam-efficientnet:

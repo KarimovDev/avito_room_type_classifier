@@ -1049,6 +1049,14 @@ interpretability = [
     { name = "matplotlib" },
     { name = "opencv-python" },
 ]
+resnet18 = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pillow" },
+    { name = "scikit-learn" },
+    { name = "torch" },
+    { name = "torchvision" },
+]
 streamlit = [
     { name = "pandas" },
     { name = "pillow" },
@@ -1089,6 +1097,14 @@ interpretability = [
     { name = "grad-cam", specifier = "==1.5.5" },
     { name = "matplotlib", specifier = "==3.10.9" },
     { name = "opencv-python", specifier = "==4.11.0.86" },
+]
+resnet18 = [
+    { name = "numpy", specifier = "==2.4.3" },
+    { name = "pandas", specifier = "==2.3.3" },
+    { name = "pillow", specifier = "==12.1.1" },
+    { name = "scikit-learn", specifier = "==1.5.2" },
+    { name = "torch", specifier = "==2.5.1" },
+    { name = "torchvision", specifier = "==0.20.1" },
 ]
 streamlit = [
     { name = "pandas", specifier = "==2.3.3" },
