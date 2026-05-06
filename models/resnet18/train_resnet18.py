@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
 from torch import nn
@@ -36,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--learning-rate", type=float, default=1e-4)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
+    parser.add_argument("--seed", type=int, default=42, help="Seed для воспроизводимого обучения.")
     parser.add_argument("--train-csv", type=Path, default=ROOT_DIR / "data" / "processed" / "train_df.csv")
     parser.add_argument("--val-csv", type=Path, default=ROOT_DIR / "data" / "processed" / "val_df.csv")
     parser.add_argument("--train-images", type=Path, default=ROOT_DIR / "data" / "raw" / "train_images")
@@ -67,6 +70,15 @@ def parse_args() -> argparse.Namespace:
         help="Минимальный прирост macro-F1, который считается улучшением.",
     )
     return parser.parse_args()
+
+
+def set_seed(seed: int) -> None:
+    """Фиксирует основные источники случайности для повторяемых экспериментов."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def validate_paths(args: argparse.Namespace) -> None:
@@ -218,7 +230,7 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
         Пути к JSON последнего запуска и JSON со списком экспериментов
     """
     metrics_dir.mkdir(parents=True, exist_ok=True)
-    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_id = str(metrics.get("run_id") or datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     metrics_with_run = {
         "run_id": run_id,
         **metrics,
@@ -245,6 +257,7 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
         "image_size": hyperparameters["image_size"],
         "learning_rate": hyperparameters["learning_rate"],
         "weight_decay": hyperparameters["weight_decay"],
+        "seed": hyperparameters["seed"],
         "pretrained": hyperparameters["pretrained"],
         "class_weights": hyperparameters["class_weights"],
         "weighted_sampling": hyperparameters["weighted_sampling"],
@@ -265,9 +278,14 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
 
 def main() -> None:
     args = parse_args()
+    if args.epochs < 1:
+        raise ValueError("--epochs должен быть >= 1")
+
     validate_paths(args)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.metrics_dir.mkdir(parents=True, exist_ok=True)
+    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    set_seed(args.seed)
 
     # Используем общий выбор устройства проекта: CUDA -> MPS -> CPU
     device = get_default_device()
@@ -283,6 +301,7 @@ def main() -> None:
         num_workers=args.num_workers,
         image_size=args.image_size,
         use_weighted_sampling=not args.no_weighted_sampling,
+        seed=args.seed,
     )
 
     model = build_resnet18(
@@ -308,7 +327,7 @@ def main() -> None:
     best_train_loss = None
     best_val_loss = None
     history: list[dict[str, object]] = []
-    checkpoint_path = args.output_dir / "resnet18_best.pt"
+    checkpoint_path = args.output_dir / f"resnet18_{run_id}_best.pt"
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
 
@@ -381,6 +400,7 @@ def main() -> None:
             break
 
     metrics = {
+        "run_id": run_id,
         "model": "resnet18",
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
@@ -396,6 +416,7 @@ def main() -> None:
             "image_size": args.image_size,
             "learning_rate": args.learning_rate,
             "weight_decay": args.weight_decay,
+            "seed": args.seed,
             "pretrained": not args.no_pretrained,
             "class_weights": not args.no_class_weights,
             "weighted_sampling": not args.no_weighted_sampling,
