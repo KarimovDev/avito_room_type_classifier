@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -179,6 +180,8 @@ def validate(
     """
     model.eval()
     total_loss = 0.0
+    per_class_loss_sum = torch.zeros(num_classes, dtype=torch.float64)
+    per_class_loss_count = torch.zeros(num_classes, dtype=torch.float64)
     y_true: list[int] = []
     y_pred: list[int] = []
 
@@ -188,15 +191,32 @@ def validate(
 
         outputs = model(images)
         loss = criterion(outputs, targets)
+        per_sample_loss = F.cross_entropy(outputs, targets, weight=criterion.weight, reduction="none")
         predictions = outputs.argmax(dim=1)
 
         total_loss += loss.item() * images.size(0)
+        for class_id in range(num_classes):
+            class_mask = targets == class_id
+            if class_mask.any():
+                per_class_loss_sum[class_id] += per_sample_loss[class_mask].sum().cpu()
+                per_class_loss_count[class_id] += class_mask.sum().cpu()
         y_true.extend(targets.cpu().tolist())
         y_pred.extend(predictions.cpu().tolist())
 
     accuracy = float(calculate_accuracy(y_true, y_pred))
     macro_f1 = float(calculate_macro_f1(y_true, y_pred))
     per_class_f1 = calculate_per_class_f1(y_true, y_pred, num_classes)
+    per_class_loss = per_class_loss_sum / per_class_loss_count.clamp_min(1)
+    y_true_array = np.asarray(y_true)
+    y_pred_array = np.asarray(y_pred)
+    for item in per_class_f1:
+        class_id = int(item["class_id"])
+        class_mask = y_true_array == class_id
+        if class_mask.any():
+            item["accuracy"] = float((y_pred_array[class_mask] == class_id).mean())
+        else:
+            item["accuracy"] = 0.0
+        item["loss"] = float(per_class_loss[class_id])
     return total_loss / len(loader.dataset), accuracy, macro_f1, per_class_f1
 
 
@@ -241,15 +261,15 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
     metrics_path.write_text(json.dumps(metrics_with_run, indent=2, ensure_ascii=False), encoding="utf-8")
 
     hyperparameters = metrics["hyperparameters"]
-    best_metrics = metrics["best_metrics"]
+    best_epoch_metrics = metrics["best_epoch_metrics"]
     experiment = {
         "run_id": run_id,
         "model": metrics["model"],
         "best_epoch": metrics["best_epoch"],
         "best_macro_f1": metrics["best_macro_f1"],
-        "best_accuracy": best_metrics.get("accuracy"),
-        "best_train_loss": metrics["best_train_loss"],
-        "best_val_loss": metrics["best_val_loss"],
+        "best_accuracy": best_epoch_metrics.get("accuracy"),
+        "best_train_loss": best_epoch_metrics.get("train_loss"),
+        "best_val_loss": best_epoch_metrics.get("val_loss"),
         "stop_reason": metrics["stop_reason"],
         "checkpoint": metrics["checkpoint"],
         "epochs": hyperparameters["epochs"],
@@ -323,10 +343,7 @@ def main() -> None:
 
     best_macro_f1 = -1.0
     best_epoch = 0
-    best_metrics: dict[str, object] = {}
-    best_train_loss = None
-    best_val_loss = None
-    history: list[dict[str, object]] = []
+    best_epoch_metrics: dict[str, object] = {}
     checkpoint_path = args.output_dir / f"resnet18_{run_id}_best.pt"
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
@@ -342,29 +359,30 @@ def main() -> None:
         )
         per_class_f1 = add_label_names(per_class_f1)
 
-        history.append(
-            {
-                "epoch": epoch,
-                "train_loss": train_loss,
-                "val_loss": val_loss,
-                "accuracy": accuracy,
-                "macro_f1": macro_f1,
-                "per_class_f1": per_class_f1,
-            }
-        )
-
         improved = macro_f1 > best_macro_f1 + args.early_stopping_min_delta
         if improved:
             # Сохраняем только лучший чекпоинт, чтобы не плодить большие файлы
             best_macro_f1 = macro_f1
             best_epoch = epoch
-            best_train_loss = train_loss
-            best_val_loss = val_loss
             epochs_without_improvement = 0
-            best_metrics = {
+            best_epoch_metrics = {
+                "epoch": epoch,
+                "train_loss": train_loss,
+                "val_loss": val_loss,
                 "accuracy": accuracy,
                 "macro_f1": macro_f1,
-                "per_class_f1": per_class_f1,
+                "per_class_metrics": [
+                    {
+                        "class_id": item["class_id"],
+                        "label": item["label"],
+                        "f1": item["f1"],
+                        "accuracy": item["accuracy"],
+                        "loss": item["loss"],
+                        # support - стандартное имя для числа validation-объектов этого класса
+                        "support": item["support"],
+                    }
+                    for item in per_class_f1
+                ],
             }
             if not args.no_save_checkpoint:
                 torch.save(
@@ -402,14 +420,6 @@ def main() -> None:
     metrics = {
         "run_id": run_id,
         "model": "resnet18",
-        "best_epoch": best_epoch,
-        "best_macro_f1": best_macro_f1,
-        "best_train_loss": best_train_loss,
-        "best_val_loss": best_val_loss,
-        "best_metrics": best_metrics,
-        "checkpoint": None if args.no_save_checkpoint else str(checkpoint_path),
-        "stop_reason": stop_reason,
-        "history": history,
         "hyperparameters": {
             "epochs": args.epochs,
             "batch_size": args.batch_size,
@@ -424,6 +434,11 @@ def main() -> None:
             "early_stopping_patience": args.early_stopping_patience,
             "early_stopping_min_delta": args.early_stopping_min_delta,
         },
+        "best_epoch": best_epoch,
+        "best_macro_f1": best_macro_f1,
+        "best_epoch_metrics": best_epoch_metrics,
+        "checkpoint": None if args.no_save_checkpoint else str(checkpoint_path),
+        "stop_reason": stop_reason,
     }
     metrics_path, experiments_path = save_metrics_report(metrics, args.metrics_dir)
 
