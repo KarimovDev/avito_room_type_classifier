@@ -344,7 +344,7 @@ def main() -> None:
     best_macro_f1 = -1.0
     best_epoch = 0
     best_epoch_metrics: dict[str, object] = {}
-    checkpoint_path = args.output_dir / f"resnet18_{run_id}_best.pt"
+    checkpoint_path = args.output_dir / "resnet18_best.pt"
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
 
