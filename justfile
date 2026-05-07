@@ -1,5 +1,6 @@
 set dotenv-load := true
 
+export UV_CACHE_DIR := ".uv-cache"
 PYTHON_VERSION := "3.12.8"
 PYTORCH_PIP := "uv pip"
 
@@ -29,6 +30,10 @@ install-streamlit: setup
 # Установить зависимости для обучения EfficientNet
 install-efficientnet: setup
     uv sync --group efficientnet
+
+# Установить зависимости для обучения ResNet18
+install-resnet18: setup
+    uv sync --group resnet18
 
 # Установить зависимости для EfficientNet и интерпретации результатов
 install-interpretability: setup
@@ -86,6 +91,14 @@ run-yolo:
 # Запустить обучение EfficientNet
 train-efficientnet:
     uv run --group efficientnet python models/efficientNet/train_efficientnet.py
+
+# Запустить обучение ResNet18
+train-resnet18 EPOCHS="30":
+    uv run --group resnet18 python models/resnet18/train_resnet18.py --epochs {{EPOCHS}}
+
+# Повторить лучший зафиксированный запуск ResNet18: class weights + без weighted sampler
+train-resnet18-best EPOCHS="30" SEED="42":
+    uv run --group resnet18 python models/resnet18/train_resnet18.py --epochs {{EPOCHS}} --seed {{SEED}} --no-weighted-sampling
 
 # Построить Grad-CAM для EfficientNet
 grad-cam-efficientnet:

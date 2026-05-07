@@ -45,6 +45,14 @@ yolo = [
   "ultralytics==8.0.20",
   "ultralyticsplus==0.0.21",
 ]
+resnet18 = [
+  "numpy==2.4.3",
+  "pandas==2.3.3",
+  "pillow==12.1.1",
+  "scikit-learn==1.5.2",
+  "torch==2.5.1",
+  "torchvision==0.20.1",
+]
 
 [tool.uv]
 managed = true

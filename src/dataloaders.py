@@ -1,5 +1,8 @@
 import os
+import random
+from functools import partial
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -12,6 +15,14 @@ DEFAULT_PROCESSED_DIR = os.path.join(ROOT_DIR, "data", "processed")
 DEFAULT_RAW_DIR = os.path.join(ROOT_DIR, "data", "raw")
 
 
+def seed_worker(worker_id, base_seed):
+    # Разводим seed по worker-процессам, чтобы DataLoader был воспроизводимым.
+    worker_seed = base_seed + worker_id
+    random.seed(worker_seed)
+    np.random.seed(worker_seed)
+    torch.manual_seed(worker_seed)
+
+
 def create_dataloaders(
         train_csv_path=None,         # путь к processed train CSV
         val_csv_path=None,           # путь к processed validation CSV
@@ -20,7 +31,8 @@ def create_dataloaders(
         batch_size=32,               # размер батча (сколько изображений за один шаг обучения)
         num_workers=2,               # число процессов для параллельной загрузки данных
         image_size=224,              # размер стороны изображения после resize
-        use_weighted_sampling=False  # Делать ли балансировку
+        use_weighted_sampling=False, # Делать ли балансировку
+        seed=None                    # Фиксирует shuffle, sampler и random transforms
 ):
     train_csv_path = train_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "train_df.csv")
     val_csv_path = val_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "val_df.csv")
@@ -43,6 +55,13 @@ def create_dataloaders(
         transform=get_val_transforms(image_size=image_size)
     )
 
+    generator = None
+    worker_init_fn = None
+    if seed is not None:
+        generator = torch.Generator()
+        generator.manual_seed(seed)
+        worker_init_fn = partial(seed_worker, base_seed=seed)
+
     sampler = None
     if use_weighted_sampling:
         targets = train_dataset.df["result"].values
@@ -56,7 +75,8 @@ def create_dataloaders(
         sampler = WeightedRandomSampler(
             weights=sample_weights,
             num_samples=len(sample_weights),
-            replacement=True
+            replacement=True,
+            generator=generator
         )
 
     # DataLoader для train
@@ -67,7 +87,9 @@ def create_dataloaders(
         # sampler нельзя использовать с shuffle совместно
         shuffle=use_weighted_sampling==False,
         sampler=sampler,
-        num_workers=num_workers
+        num_workers=num_workers,
+        worker_init_fn=worker_init_fn,
+        generator=generator
     )
 
     # DataLoader для validation
@@ -76,7 +98,9 @@ def create_dataloaders(
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=num_workers
+        num_workers=num_workers,
+        worker_init_fn=worker_init_fn,
+        generator=generator
     )
 
     return train_loader, val_loader
