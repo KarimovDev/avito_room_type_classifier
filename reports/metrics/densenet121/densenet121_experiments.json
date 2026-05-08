@@ -1,0 +1,25 @@
+[
+  {
+    "run_id": "2026-05-08_19-25-06",
+    "model": "densenet121",
+    "best_epoch": 4,
+    "best_macro_f1": 0.7191429237438269,
+    "best_accuracy": 0.7211740041928721,
+    "best_train_loss": 0.8901878870766738,
+    "best_val_loss": 1.3656852086385092,
+    "stop_reason": "stage3_complete",
+    "checkpoint": "C:\\Users\\pantp\\room_type_classifier\\outputs\\models\\densenet121\\densenet121_2026-05-08_19-25-06_best.pth",
+    "epochs_stage1": 2,
+    "epochs_stage2": 8,
+    "epochs_stage3": 5,
+    "batch_size": 32,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "label_smoothing": 0.1,
+    "pretrained": true,
+    "class_weights": true,
+    "weighted_sampling": true,
+    "metrics_json": "C:\\Users\\pantp\\room_type_classifier\\reports\\metrics\\densenet121\\densenet121_metrics.json"
+  }
+]
