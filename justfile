@@ -1,6 +1,5 @@
 set dotenv-load := true
 
-export UV_CACHE_DIR := ".uv-cache"
 PYTHON_VERSION := "3.12.8"
 PYTORCH_PIP := "uv pip"
 
