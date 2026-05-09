@@ -3,7 +3,6 @@ set dotenv-load := true
 # Keep Unix shell for macOS/Linux, use PowerShell only on Windows.
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
-export UV_CACHE_DIR := ".uv-cache"
 PYTHON_VERSION := "3.12.8"
 PYTORCH_PIP := "uv pip"
 
