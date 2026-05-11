@@ -9,7 +9,7 @@ from sklearn.metrics import f1_score
 import json
 import os
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
@@ -20,8 +20,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=30)
     args = parser.parse_args()
-    CURRENT_SCRIPT_PATH = Path(__file__).resolve()
-    PROJECT_ROOT = CURRENT_SCRIPT_PATH.parent 
 
     DEVICE = get_default_device()
     print(f"Используемое устройство: {DEVICE}")
