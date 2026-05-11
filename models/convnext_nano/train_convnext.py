@@ -4,22 +4,30 @@ import torch.optim as optim
 import timm
 from pathlib import Path
 import sys
+import argparse  # Добавлено
 from src.device import get_default_device 
 from sklearn.metrics import f1_score
 import json
 import os
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-sys.path.append(str(PROJECT_ROOT))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
 from src.dataloaders import create_dataloaders
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--epochs', type=int, default=30)
+    args = parser.parse_args()
+    CURRENT_SCRIPT_PATH = Path(__file__).resolve()
+    PROJECT_ROOT = CURRENT_SCRIPT_PATH.parent 
+
     DEVICE = get_default_device()
     print(f"Используемое устройство: {DEVICE}")
     
     BATCH_SIZE = 32
-    EPOCHS = 30    
+    EPOCHS = args.epochs
   
     DATA_DIR = PROJECT_ROOT / "data"
     train_csv = DATA_DIR / "processed" / "train_df.csv"
@@ -40,7 +48,6 @@ def main():
 
     print(f"ИТОГО: Объектов в Train: {len(train_loader.dataset)}")
 
-    # Создаем модель
     print(f"Инициализация ConvNeXt Nano...")
     model = timm.create_model(
         'convnext_nano', 
@@ -50,18 +57,15 @@ def main():
         drop_path_rate=0.3
     ).to(DEVICE)
 
-    # Оптимизатор и Лосс
     criterion = nn.CrossEntropyLoss(label_smoothing=0.15)
     optimizer = optim.AdamW(model.parameters(), lr=2e-5, weight_decay=0.1)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=3)
 
-    # Цикл обучения
-    print("Начало обучения...")
+    print(f"Начало обучения на {EPOCHS} эпох...")
     
     best_macro_f1 = 0.0
 
     for epoch in range(EPOCHS):
-        # Обучение
         model.train()
         train_loss = 0.0
         for images, targets in train_loader:
@@ -76,7 +80,6 @@ def main():
 
         epoch_train_loss = train_loss / len(train_loader)
 
-        # Валидация
         model.eval()
         all_preds = []
         all_targets = []
@@ -91,7 +94,6 @@ def main():
                 val_loss += loss.item()
 
                 preds = torch.argmax(outputs, dim=1)
-                
                 all_preds.extend(preds.cpu().numpy())
                 all_targets.extend(targets.cpu().numpy())
 
@@ -107,7 +109,6 @@ def main():
 
         if macro_f1 > best_macro_f1:
             best_macro_f1 = macro_f1
-
             torch.save(model.state_dict(), save_dir / "best_model_ConvNeXt_Nano.pth")
             
             metrics = {
@@ -117,9 +118,9 @@ def main():
                 "accuracy": float(val_acc),
                 "macro_f1": float(macro_f1)
             }
-            with open(save_dir / "best_metrics.json", "w", encoding="utf-8") as f:
+            
+            with open(save_dir / "best_metrics_convnext.json", "w", encoding="utf-8") as f:
                 json.dump(metrics, f, indent=4)
-                
                 print(f"Найдена лучшая модель (F1: {best_macro_f1:.4f})")
 
 if __name__ == "__main__":
