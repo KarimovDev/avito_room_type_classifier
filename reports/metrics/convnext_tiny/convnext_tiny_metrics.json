@@ -1,0 +1,195 @@
+{
+  "run_id": "2026-05-10_22-58-41",
+  "model": "convnext_tiny",
+  "hyperparameters": {
+    "model_name": "convnext_tiny",
+    "metrics_dir": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\reports\\metrics\\convnext_tiny",
+    "epochs": 30,
+    "batch_size": 16,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "pretrained": true,
+    "class_weights": true,
+    "weighted_sampling": true,
+    "save_checkpoint": true,
+    "early_stopping_patience": 3,
+    "early_stopping_min_delta": 0.0001,
+    "amp": true,
+    "progress_bars": true
+  },
+  "best_epoch": 8,
+  "best_macro_f1": 0.6941805908567718,
+  "best_epoch_metrics": {
+    "epoch": 8,
+    "train_loss": 0.06943961050065789,
+    "val_loss": 1.3212654240726176,
+    "accuracy": 0.7421383647798742,
+    "macro_f1": 0.6941805908567718,
+    "per_class_metrics": [
+      {
+        "class_id": 0,
+        "label": "0",
+        "f1": 0.8059701492537313,
+        "accuracy": 0.7941176470588235,
+        "loss": 0.5418342099373523,
+        "support": 34
+      },
+      {
+        "class_id": 1,
+        "label": "1",
+        "f1": 0.4375,
+        "accuracy": 0.4666666666666667,
+        "loss": 2.5582943723537026,
+        "support": 15
+      },
+      {
+        "class_id": 2,
+        "label": "2",
+        "f1": 0.4642857142857143,
+        "accuracy": 0.5652173913043478,
+        "loss": 1.517799355454095,
+        "support": 23
+      },
+      {
+        "class_id": 3,
+        "label": "3",
+        "f1": 0.5862068965517241,
+        "accuracy": 0.5666666666666667,
+        "loss": 1.406458485716333,
+        "support": 30
+      },
+      {
+        "class_id": 4,
+        "label": "4",
+        "f1": 0.7636363636363637,
+        "accuracy": 0.875,
+        "loss": 0.2842886990692932,
+        "support": 24
+      },
+      {
+        "class_id": 5,
+        "label": "5",
+        "f1": 0.35714285714285715,
+        "accuracy": 0.23809523809523808,
+        "loss": 9.801021377511677,
+        "support": 21
+      },
+      {
+        "class_id": 6,
+        "label": "6",
+        "f1": 0.7241379310344828,
+        "accuracy": 0.6774193548387096,
+        "loss": 1.4474663482082355,
+        "support": 31
+      },
+      {
+        "class_id": 7,
+        "label": "7",
+        "f1": 0.9302325581395349,
+        "accuracy": 0.8695652173913043,
+        "loss": 0.6167737122463144,
+        "support": 23
+      },
+      {
+        "class_id": 8,
+        "label": "8",
+        "f1": 0.9454545454545454,
+        "accuracy": 0.9285714285714286,
+        "loss": 0.37933823921671966,
+        "support": 28
+      },
+      {
+        "class_id": 9,
+        "label": "9",
+        "f1": 0.9032258064516129,
+        "accuracy": 0.9333333333333333,
+        "loss": 0.10262790871784092,
+        "support": 30
+      },
+      {
+        "class_id": 10,
+        "label": "10",
+        "f1": 0.8679245283018868,
+        "accuracy": 0.8214285714285714,
+        "loss": 0.5543525814511148,
+        "support": 28
+      },
+      {
+        "class_id": 11,
+        "label": "11",
+        "f1": 0.5945945945945946,
+        "accuracy": 0.4782608695652174,
+        "loss": 8.4282895750518,
+        "support": 23
+      },
+      {
+        "class_id": 12,
+        "label": "12",
+        "f1": 0.8780487804878049,
+        "accuracy": 0.8181818181818182,
+        "loss": 0.6315337768534267,
+        "support": 22
+      },
+      {
+        "class_id": 13,
+        "label": "13",
+        "f1": 0.851063829787234,
+        "accuracy": 0.9523809523809523,
+        "loss": 0.25561368809818913,
+        "support": 21
+      },
+      {
+        "class_id": 14,
+        "label": "14",
+        "f1": 0.8695652173913043,
+        "accuracy": 0.9523809523809523,
+        "loss": 0.08912996632335264,
+        "support": 21
+      },
+      {
+        "class_id": 15,
+        "label": "15",
+        "f1": 0.9090909090909091,
+        "accuracy": 0.967741935483871,
+        "loss": 0.06256555402726535,
+        "support": 31
+      },
+      {
+        "class_id": 16,
+        "label": "16",
+        "f1": 0.7307692307692307,
+        "accuracy": 0.6785714285714286,
+        "loss": 1.2427059864442396,
+        "support": 28
+      },
+      {
+        "class_id": 17,
+        "label": "17",
+        "f1": 0.36,
+        "accuracy": 0.391304347826087,
+        "loss": 2.2109988888696535,
+        "support": 23
+      },
+      {
+        "class_id": 18,
+        "label": "18",
+        "f1": 0.0,
+        "accuracy": 0.0,
+        "loss": 0.0,
+        "support": 0
+      },
+      {
+        "class_id": 19,
+        "label": "19",
+        "f1": 0.9047619047619048,
+        "accuracy": 0.9047619047619048,
+        "loss": 0.348413306263475,
+        "support": 21
+      }
+    ]
+  },
+  "checkpoint": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\outputs\\models\\convnext_tiny\\convnext_tiny_best.pt",
+  "stop_reason": "early_stopping"
+}

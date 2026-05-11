@@ -32,7 +32,9 @@ def create_dataloaders(
         num_workers=2,               # число процессов для параллельной загрузки данных
         image_size=224,              # размер стороны изображения после resize
         use_weighted_sampling=False, # Делать ли балансировку
-        seed=None                    # Фиксирует shuffle, sampler и random transforms
+        seed=None,                   # Фиксирует shuffle, sampler и random transforms
+        pin_memory=False,            # True на CUDA — быстрее перенос батча на GPU
+        persistent_workers=False,    # не перезапускать worker между эпохами (только при num_workers>0)
 ):
     train_csv_path = train_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "train_df.csv")
     val_csv_path = val_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "val_df.csv")
@@ -89,7 +91,9 @@ def create_dataloaders(
         sampler=sampler,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
-        generator=generator
+        generator=generator,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers and num_workers > 0,
     )
 
     # DataLoader для validation
@@ -100,7 +104,9 @@ def create_dataloaders(
         shuffle=False,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
-        generator=generator
+        generator=generator,
+        pin_memory=pin_memory,
+        persistent_workers=persistent_workers and num_workers > 0,
     )
 
     return train_loader, val_loader
