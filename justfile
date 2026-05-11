@@ -116,7 +116,7 @@ grad-cam-efficientnet:
 
 # Запустить обучение ConvNeXt Nano
 train-convnext EPOCHS="30":
-    uv run --group convnext python models/convnext/train_convnext.py --epochs {{EPOCHS}}
+    uv run --group convnext python models/convnext_nano/train_convnext.py --epochs {{EPOCHS}}
 
 # Запустить Streamlit-приложение
 run-streamlit:
