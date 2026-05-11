@@ -25,10 +25,11 @@ print(ROOT_DIR)
 from src.device import get_default_device
 from src.labels import load_label_mapping
 from src.transforms import get_val_transforms
+from models.resnet18.resnet18 import build_resnet18
 
 
 # Пути/настройки моделей. Их можно переопределять через переменные окружения
-YOLO_MODEL_PATH = ROOT_DIR / "models" / "yolo" / "downloads" / "keremberke" / "yolov8m-scene-classification" / "best.pt"
+YOLO_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "yolo_best.pt"
 YOLO_REPO_ID = "keremberke/yolov8m-scene-classification"
 YOLO_FILENAME = "best.pt"
 EFFICIENTNET_B0_CHECKPOINT_PATH = Path(
@@ -45,6 +46,8 @@ EFFICIENTNET_B1_CHECKPOINT_PATH = Path(
 )
 RESNET50_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "best_resnet50_avito.pth"
 RESNET50_FILENAME = "best_resnet50_avito.pth"
+RESNET18_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "resnet18_best.pt"
+RESNET18_FILENAME = "resnet18_best.pt"
 
 
 @dataclass(frozen=True)
@@ -306,6 +309,75 @@ def resnet50_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, fl
     raise RuntimeError(f"EfficientNet checkpoint is unavailable: {checkpoint_path}")
 
 
+@st.cache_resource(show_spinner="Загружаем ResNet50...")
+def load_resnet18_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+        num_classes = int(checkpoint.get("num_classes", 20))
+        image_size = int(checkpoint.get("image_size", 224))
+    else:
+        state_dict = checkpoint
+        num_classes = state_dict["fc.weight"].shape[0]
+        image_size = 224
+
+    model = build_resnet18(num_classes,True,)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+@st.cache_data(show_spinner=False)
+def _predict_resnet18_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание resnet18 с кэшированием.
+
+    Ключ кэша включает путь к чекпоинту, чтобы разные модели не смешивались.
+    """
+    loaded_model = load_resnet18_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    # Трансформации должны совпадать с теми, что были при обучении/валидации
+    # Берем из общего модуля src/transforms.py
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        # Softmax превращает logits в вероятности по классам
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+def resnet18_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер: либо возвращаем предсказание, либо сообщаем, что чекпоинт недоступен."""
+    prediction = _predict_resnet18_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"EfficientNet checkpoint is unavailable: {checkpoint_path}")
+
+
 MODELS = [
     # Список моделей, которые можно включать/выключать в сайдбаре
     ModelConfig(
@@ -335,6 +407,13 @@ MODELS = [
         description="Обученный ResNet50 checkpoint на локальном датасете.",
         predictor=lambda image_bytes: resnet50_predict(image_bytes, RESNET50_MODEL_PATH),
         is_available=RESNET50_MODEL_PATH.exists,
+    ),
+    ModelConfig(
+        key="resnet18",
+        title="ResNet18",
+        description="Обученный ResNet18 checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: resnet18_predict(image_bytes, RESNET18_MODEL_PATH),
+        is_available=RESNET18_MODEL_PATH.exists,
     ),
 ]
 
