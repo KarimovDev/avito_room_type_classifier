@@ -49,6 +49,10 @@ install-interpretability: setup
 install-yolo: setup
     uv sync --group yolo
 
+# Установить зависимости для обучения ConvNeXt Nano
+install-convnext_nano: setup
+    uv sync --group convnext_nano
+
 # Установить все группы зависимостей проекта
 install-all: setup
     uv sync --all-groups
@@ -113,6 +117,10 @@ train-resnet18-best EPOCHS="30" SEED="42":
 # Построить Grad-CAM для EfficientNet
 grad-cam-efficientnet:
     uv run --group efficientnet --group interpretability python models/efficientNet/grad_cam.py
+
+# Запустить обучение ConvNeXt Nano
+train-convnext_nano EPOCHS="30":
+    uv run --group convnext_nano python models/convnext_nano/train_convnext.py --epochs {{EPOCHS}}
 
 # Запустить Streamlit-приложение
 run-streamlit:
