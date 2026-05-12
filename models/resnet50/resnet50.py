@@ -43,7 +43,7 @@ VAL_DIR = os.path.join(DATA_DIR_RAW, 'val_images')
 
 BATCH_SIZE = 32           # Можно увеличить, если хватает GPU памяти
 NUM_WORKERS = 0           # В Colab обычно 2-4 достаточно
-NUM_EPOCHS = 2           # Для старта 10, потом можно 15-30
+NUM_EPOCHS = 15           # Для старта 10, потом можно 15-30
 LEARNING_RATE = 1e-4      # Хороший старт для fine-tuning ResNet50
 RANDOM_SEED = 42
 MODEL_SAVE_PATH = PROJECT_ROOT/Path("./outputs/models/best_resnet50_avito.pth").resolve()

@@ -3,20 +3,31 @@ from __future__ import annotations
 import io
 import os
 import time
+import sys
+import timm
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
+
+import torch.nn as nn
+from torchvision import transforms, models
+from torchvision.transforms import v2
 
 import pandas as pd
 import streamlit as st
 from PIL import Image, ImageOps
 
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+print(ROOT_DIR)
+
 from src.device import get_default_device
 from src.labels import load_label_mapping
 from src.transforms import get_val_transforms
+from models.resnet18.resnet18 import build_resnet18
 
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
 # Пути/настройки моделей. Их можно переопределять через переменные окружения
 YOLO_MODEL_PATH = ROOT_DIR / "models" / "yolo" / "downloads" / "keremberke" / "yolov8m-scene-classification" / "best.pt"
 YOLO_REPO_ID = "keremberke/yolov8m-scene-classification"
@@ -33,6 +44,9 @@ EFFICIENTNET_B1_CHECKPOINT_PATH = Path(
         ROOT_DIR / "models" / "efficientNet" / "artifacts" / "efficientnet_b1_best.pt",
     )
 )
+RESNET50_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "best_resnet50_avito.pth"
+RESNET18_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "resnet18" / "resnet18_best.pt"
+CONVNEXT_NANO_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "best_model_convnext_nano.pth"
 
 
 @dataclass(frozen=True)
@@ -212,6 +226,242 @@ def efficientnet_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str
     raise RuntimeError(f"EfficientNet checkpoint is unavailable: {checkpoint_path}")
 
 
+def build_resnet50_model(num_classes):
+    model = models.resnet50(weights=None)
+
+    in_features = model.fc.in_features
+    model.fc = nn.Linear(in_features, num_classes)
+
+    return model
+
+@st.cache_resource(show_spinner="Загружаем ResNet50...")
+def load_resnet50_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+        num_classes = int(checkpoint.get("num_classes", 20))
+        image_size = int(checkpoint.get("image_size", 224))
+    else:
+        state_dict = checkpoint
+        num_classes = state_dict["fc.weight"].shape[0]
+        image_size = 224
+
+    model = build_resnet50_model(num_classes)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+
+@st.cache_data(show_spinner=False)
+def _predict_resnet50_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание resnet50 с кэшированием.
+
+    Ключ кэша включает путь к чекпоинту, чтобы разные модели не смешивались.
+    """
+    loaded_model = load_resnet50_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    # Трансформации должны совпадать с теми, что были при обучении/валидации
+    # Берем из общего модуля src/transforms.py
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        # Softmax превращает logits в вероятности по классам
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+
+def resnet50_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер: либо возвращаем предсказание, либо сообщаем, что чекпоинт недоступен."""
+    prediction = _predict_resnet50_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"ResNet50 checkpoint is unavailable: {checkpoint_path}")
+
+
+@st.cache_resource(show_spinner="Загружаем ResNet18...")
+def load_resnet18_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+        num_classes = int(checkpoint.get("num_classes", 20))
+        image_size = int(checkpoint.get("image_size", 224))
+    else:
+        state_dict = checkpoint
+        num_classes = state_dict["fc.weight"].shape[0]
+        image_size = 224
+
+    model = build_resnet18(num_classes, pretrained=False)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+@st.cache_data(show_spinner=False)
+def _predict_resnet18_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание resnet18 с кэшированием.
+
+    Ключ кэша включает путь к чекпоинту, чтобы разные модели не смешивались.
+    """
+    loaded_model = load_resnet18_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    # Трансформации должны совпадать с теми, что были при обучении/валидации
+    # Берем из общего модуля src/transforms.py
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        # Softmax превращает logits в вероятности по классам
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+def resnet18_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер: либо возвращаем предсказание, либо сообщаем, что чекпоинт недоступен."""
+    prediction = _predict_resnet18_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"ResNet18 checkpoint is unavailable: {checkpoint_path}")
+
+
+def num_classes_convnext_nano(state_dict: dict) -> int:
+    """Число классов из весов головы timm ConvNeXt (plain state_dict без метаданных)."""
+    if "head.fc.weight" in state_dict:
+        return int(state_dict["head.fc.weight"].shape[0])
+    for key in ("head.weight", "classifier.weight"):
+        if key in state_dict:
+            return int(state_dict[key].shape[0])
+    raise ValueError(
+        "Не удалось определить num_classes: нет ключей head.fc.weight / head.weight / classifier.weight"
+    )
+
+
+@st.cache_resource(show_spinner="Загружаем convnext nano...")
+def load_convnext_nano_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        state_dict = checkpoint["model_state_dict"]
+        image_size = int(checkpoint.get("image_size", 224))
+        if "num_classes" in checkpoint:
+            num_classes = int(checkpoint["num_classes"])
+        else:
+            num_classes = num_classes_convnext_nano(state_dict)
+    else:
+        state_dict = checkpoint
+        image_size = 224
+        num_classes = num_classes_convnext_nano(state_dict)
+
+    model = timm.create_model(
+        'convnext_nano',
+        pretrained=False,
+        num_classes=num_classes,
+        drop_rate=0.5,
+        drop_path_rate=0.3)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+@st.cache_data(show_spinner=False)
+def _predict_convnext_nano_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание convnext nano с кэшированием.
+
+    Ключ кэша включает путь к чекпоинту, чтобы разные модели не смешивались.
+    """
+    loaded_model = load_convnext_nano_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    # Трансформации должны совпадать с теми, что были при обучении/валидации
+    # Берем из общего модуля src/transforms.py
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        # Softmax превращает logits в вероятности по классам
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+def convnext_nano_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер: либо возвращаем предсказание, либо сообщаем, что чекпоинт недоступен."""
+    prediction = _predict_convnext_nano_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"Convnext Nano checkpoint is unavailable: {checkpoint_path}")
+
 MODELS = [
     # Список моделей, которые можно включать/выключать в сайдбаре
     ModelConfig(
@@ -234,6 +484,27 @@ MODELS = [
         description="Обученный EfficientNet-B1 checkpoint на локальном датасете.",
         predictor=lambda image_bytes: efficientnet_predict(image_bytes, EFFICIENTNET_B1_CHECKPOINT_PATH),
         is_available=EFFICIENTNET_B1_CHECKPOINT_PATH.exists,
+    ),
+    ModelConfig(
+        key="resnet50",
+        title="ResNet50",
+        description="Обученный ResNet50 checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: resnet50_predict(image_bytes, RESNET50_MODEL_PATH),
+        is_available=RESNET50_MODEL_PATH.exists,
+    ),
+    ModelConfig(
+        key="resnet18",
+        title="ResNet18",
+        description="Обученный ResNet18 checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: resnet18_predict(image_bytes, RESNET18_MODEL_PATH),
+        is_available=RESNET18_MODEL_PATH.exists,
+    ),
+    ModelConfig(
+        key="convnext_nano",
+        title="ConvNext Nano",
+        description="Обученный ConvNext Nano checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: convnext_nano_predict(image_bytes, CONVNEXT_NANO_MODEL_PATH),
+        is_available=CONVNEXT_NANO_MODEL_PATH.exists,
     ),
 ]
 
@@ -270,6 +541,18 @@ def render_sidebar() -> list[ModelConfig]:
         st.sidebar.success("EfficientNet B1 checkpoint найден")
     else:
         st.sidebar.info("EfficientNet B1 checkpoint не найден")
+    if RESNET50_MODEL_PATH.exists():
+        st.sidebar.success("ResNet50 checkpoint найден")
+    else:
+        st.sidebar.info("ResNet50 checkpoint не найден")
+    if RESNET18_MODEL_PATH.exists():
+        st.sidebar.success("ResNet18 checkpoint найден")
+    else:
+        st.sidebar.info("ResNet18 checkpoint не найден")
+    if CONVNEXT_NANO_MODEL_PATH.exists():
+        st.sidebar.success("ConvNext Nano checkpoint найден")
+    else:
+        st.sidebar.info("ConvNext Nano checkpoint не найден")    
 
     return selected_models
 

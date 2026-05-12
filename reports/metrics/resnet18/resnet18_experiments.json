@@ -6,7 +6,7 @@
     "best_macro_f1": 0.6964147227309473,
     "best_accuracy": 0.7127882599580713,
     "stop_reason": "early_stopping",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -17,7 +17,7 @@
     "weighted_sampling": false,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   },
   {
     "run_id": "2026-05-05_21-47-01",
@@ -26,7 +26,7 @@
     "best_macro_f1": 0.6881062883222873,
     "best_accuracy": 0.6981132075471698,
     "stop_reason": "early_stopping",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -37,7 +37,7 @@
     "weighted_sampling": true,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   },
   {
     "run_id": "2026-05-05_21-54-16",
@@ -46,7 +46,7 @@
     "best_macro_f1": 0.6750671577602407,
     "best_accuracy": 0.6876310272536688,
     "stop_reason": "early_stopping",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -57,7 +57,7 @@
     "weighted_sampling": false,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   },
   {
     "run_id": "2026-05-06_14-13-38",
@@ -68,7 +68,7 @@
     "best_train_loss": 0.3056614597638448,
     "best_val_loss": 0.9938830247215255,
     "stop_reason": "max_epochs",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
     "epochs": 5,
     "batch_size": 32,
     "image_size": 224,
@@ -79,7 +79,7 @@
     "weighted_sampling": false,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   },
   {
     "run_id": "2026-05-06_15-21-00",
@@ -90,7 +90,7 @@
     "best_train_loss": 0.07192233005387384,
     "best_val_loss": 1.0888039800855849,
     "stop_reason": "early_stopping",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_2026-05-06_15-21-00_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_2026-05-06_15-21-00_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -102,7 +102,7 @@
     "weighted_sampling": false,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   },
   {
     "run_id": "2026-05-06_16-24-09",
@@ -113,7 +113,7 @@
     "best_train_loss": 0.07192233005387384,
     "best_val_loss": 1.0888039800855849,
     "stop_reason": "early_stopping",
-    "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_2026-05-06_16-24-09_best.pt",
+    "checkpoint": "outputs/models/resnet18/resnet18_2026-05-06_16-24-09_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -125,6 +125,29 @@
     "weighted_sampling": false,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/Users/user/projects/Python/room_type_classifier/reports/metrics/resnet18/resnet18_metrics.json"
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
+  },
+  {
+    "run_id": "2026-05-11_13-05-41",
+    "model": "resnet18",
+    "best_epoch": 10,
+    "best_macro_f1": 0.6851835125706538,
+    "best_accuracy": 0.6960167714884696,
+    "best_train_loss": 0.07192233005387384,
+    "best_val_loss": 1.0888039800855849,
+    "stop_reason": "early_stopping",
+    "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
+    "epochs": 30,
+    "batch_size": 32,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "pretrained": true,
+    "class_weights": true,
+    "weighted_sampling": false,
+    "early_stopping_patience": 3,
+    "early_stopping_min_delta": 0.0001,
+    "metrics_json": "reports/metrics/resnet18/resnet18_metrics.json"
   }
 ]

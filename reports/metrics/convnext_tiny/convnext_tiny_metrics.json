@@ -1,0 +1,195 @@
+{
+  "run_id": "2026-05-12_19-01-51_793558",
+  "model": "convnext_tiny",
+  "hyperparameters": {
+    "model_name": "convnext_tiny",
+    "config": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\models\\convnext_tiny\\train_config.json",
+    "metrics_dir": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\reports\\metrics\\convnext_tiny",
+    "epochs": 30,
+    "batch_size": 16,
+    "image_size": 224,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "seed": 42,
+    "pretrained": true,
+    "class_weights": true,
+    "weighted_sampling": false,
+    "save_checkpoint": true,
+    "save_last_every_epoch": true,
+    "early_stopping_patience": 3,
+    "early_stopping_min_delta": 0.0001,
+    "amp": true,
+    "show_progress": true,
+    "pin_memory": false,
+    "persistent_workers": false,
+    "exclude_class_id": null,
+    "resume_from": null,
+    "require_cuda": false
+  },
+  "best_epoch": 4,
+  "best_macro_f1": 0.7638448609697832,
+  "best_epoch_metrics": {
+    "epoch": 4,
+    "train_loss": 0.22108442968004294,
+    "val_loss": 0.8605723231093688,
+    "accuracy": 0.779874213836478,
+    "macro_f1": 0.7638448609697832,
+    "per_class_metrics": [
+      {
+        "class_id": 0,
+        "label": "кухня / столовая",
+        "f1": 0.85,
+        "accuracy": 1.0,
+        "loss": 0.07975621411391973,
+        "support": 34
+      },
+      {
+        "class_id": 1,
+        "label": "кухня-гостиная",
+        "f1": 0.48484848484848486,
+        "accuracy": 0.5333333333333333,
+        "loss": 1.6047651216387748,
+        "support": 15
+      },
+      {
+        "class_id": 2,
+        "label": "универсальная комната",
+        "f1": 0.2702702702702703,
+        "accuracy": 0.21739130434782608,
+        "loss": 1.9067518322364143,
+        "support": 23
+      },
+      {
+        "class_id": 3,
+        "label": "гостиная",
+        "f1": 0.6440677966101694,
+        "accuracy": 0.6333333333333333,
+        "loss": 0.9192025184631347,
+        "support": 30
+      },
+      {
+        "class_id": 4,
+        "label": "спальня",
+        "f1": 0.8,
+        "accuracy": 0.9166666666666666,
+        "loss": 0.3911547357371698,
+        "support": 24
+      },
+      {
+        "class_id": 5,
+        "label": "кабинет",
+        "f1": 0.6842105263157895,
+        "accuracy": 0.6190476190476191,
+        "loss": 3.5849981889838265,
+        "support": 21
+      },
+      {
+        "class_id": 6,
+        "label": "детская",
+        "f1": 0.7777777777777778,
+        "accuracy": 0.6774193548387096,
+        "loss": 1.3733213776872764,
+        "support": 31
+      },
+      {
+        "class_id": 7,
+        "label": "ванная комната",
+        "f1": 0.851063829787234,
+        "accuracy": 0.8695652173913043,
+        "loss": 0.19605608166033484,
+        "support": 23
+      },
+      {
+        "class_id": 8,
+        "label": "туалет",
+        "f1": 0.9259259259259259,
+        "accuracy": 0.8928571428571429,
+        "loss": 0.23324111839091138,
+        "support": 28
+      },
+      {
+        "class_id": 9,
+        "label": "совмещенный санузел",
+        "f1": 0.8852459016393442,
+        "accuracy": 0.9,
+        "loss": 0.2341940463054925,
+        "support": 30
+      },
+      {
+        "class_id": 10,
+        "label": "коридор / прихожая",
+        "f1": 0.8421052631578947,
+        "accuracy": 0.8571428571428571,
+        "loss": 0.6524549199966714,
+        "support": 28
+      },
+      {
+        "class_id": 11,
+        "label": "гардеробная / кладовая / постирочная",
+        "f1": 0.7142857142857143,
+        "accuracy": 0.6521739130434783,
+        "loss": 5.423635933467227,
+        "support": 23
+      },
+      {
+        "class_id": 12,
+        "label": "балкон / лоджия",
+        "f1": 0.9090909090909091,
+        "accuracy": 0.9090909090909091,
+        "loss": 0.2172936820160513,
+        "support": 22
+      },
+      {
+        "class_id": 13,
+        "label": "вид из окна / с балкона",
+        "f1": 0.9047619047619048,
+        "accuracy": 0.9047619047619048,
+        "loss": 0.3923229645727025,
+        "support": 21
+      },
+      {
+        "class_id": 14,
+        "label": "дом снаружи / двор",
+        "f1": 0.8636363636363636,
+        "accuracy": 0.9047619047619048,
+        "loss": 0.31267905618906733,
+        "support": 21
+      },
+      {
+        "class_id": 15,
+        "label": "подъезд / лестничная площадка",
+        "f1": 0.9375,
+        "accuracy": 0.967741935483871,
+        "loss": 0.13924221209280432,
+        "support": 31
+      },
+      {
+        "class_id": 16,
+        "label": "другое",
+        "f1": 0.7924528301886793,
+        "accuracy": 0.75,
+        "loss": 0.6229371926830416,
+        "support": 28
+      },
+      {
+        "class_id": 17,
+        "label": "предметы интерьера / быт.техника",
+        "f1": 0.4489795918367347,
+        "accuracy": 0.4782608695652174,
+        "loss": 1.7138758043343525,
+        "support": 23
+      },
+      {
+        "class_id": 18,
+        "label": "комната без мебели",
+        "f1": 0.926829268292683,
+        "accuracy": 0.9047619047619048,
+        "loss": 0.2222883802134588,
+        "support": 21
+      }
+    ]
+  },
+  "checkpoint": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\outputs\\models\\convnext_tiny\\convnext_tiny_best.pt",
+  "last_checkpoint": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\outputs\\models\\convnext_tiny\\convnext_tiny_last.pt",
+  "stop_reason": "early_stopping"
+}

@@ -25,6 +25,18 @@ from src.labels import load_label_mapping
 from src.metrics import calculate_accuracy, calculate_macro_f1, calculate_per_class_f1
 
 
+def to_project_relative_path(path: Path | str | None) -> str | None:
+    """Возвращает путь относительно корня проекта, если он находится внутри репозитория."""
+    if path is None:
+        return None
+
+    path = Path(path)
+    try:
+        return path.resolve().relative_to(ROOT_DIR).as_posix()
+    except ValueError:
+        return str(path)
+
+
 def parse_args() -> argparse.Namespace:
     """Читает параметры запуска обучения из командной строки
 
@@ -283,7 +295,7 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
         "weighted_sampling": hyperparameters["weighted_sampling"],
         "early_stopping_patience": hyperparameters["early_stopping_patience"],
         "early_stopping_min_delta": hyperparameters["early_stopping_min_delta"],
-        "metrics_json": str(metrics_path),
+        "metrics_json": to_project_relative_path(metrics_path),
     }
 
     if experiments_path.exists():
@@ -345,6 +357,7 @@ def main() -> None:
     best_epoch = 0
     best_epoch_metrics: dict[str, object] = {}
     checkpoint_path = args.output_dir / "resnet18_best.pt"
+    checkpoint_json_path = to_project_relative_path(checkpoint_path)
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
 
@@ -437,7 +450,7 @@ def main() -> None:
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
         "best_epoch_metrics": best_epoch_metrics,
-        "checkpoint": None if args.no_save_checkpoint else str(checkpoint_path),
+        "checkpoint": None if args.no_save_checkpoint else checkpoint_json_path,
         "stop_reason": stop_reason,
     }
     metrics_path, experiments_path = save_metrics_report(metrics, args.metrics_dir)

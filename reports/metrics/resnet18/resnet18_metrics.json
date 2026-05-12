@@ -1,5 +1,5 @@
 {
-  "run_id": "2026-05-06_16-24-09",
+  "run_id": "2026-05-11_13-05-41",
   "model": "resnet18",
   "hyperparameters": {
     "epochs": 30,
@@ -178,6 +178,6 @@
       }
     ]
   },
-  "checkpoint": "/Users/user/projects/Python/room_type_classifier/outputs/models/resnet18/resnet18_2026-05-06_16-24-09_best.pt",
+  "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
   "stop_reason": "early_stopping"
 }
