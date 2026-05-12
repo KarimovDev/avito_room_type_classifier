@@ -37,6 +37,10 @@ install-efficientnet: setup
 install-resnet18: setup
     uv sync --group resnet18
 
+# Установить зависимости для обучения ResNet50
+install-resnet50: setup
+    uv sync --group resnet50
+
 # Установить зависимости для EfficientNet и интерпретации результатов
 install-interpretability: setup
     uv sync --group efficientnet --group interpretability
