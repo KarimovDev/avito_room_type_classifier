@@ -47,7 +47,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--val-csv", type=Path, default=ROOT_DIR / "data" / "processed" / "val_df.csv")
     parser.add_argument("--train-images", type=Path, default=ROOT_DIR / "data" / "raw" / "train_images")
     parser.add_argument("--val-images", type=Path, default=ROOT_DIR / "data" / "raw" / "val_images")
-    parser.add_argument("--output-dir", type=Path, default=ROOT_DIR / "models" / "efficientNet" / "artifacts")
+    parser.add_argument("--output-dir", type=Path, default=ROOT_DIR / "outputs" / "models" / "efficientnet")
+    parser.add_argument("--metrics-dir", type=Path, default=ROOT_DIR / "reports" / "metrics" / "efficientnet")
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", type=int, default=2)
@@ -102,6 +103,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=1e-7,
         help="Нижняя граница lr для ReduceLROnPlateau.",
+    )
+    parser.add_argument(
+        "--no-save-checkpoint",
+        action="store_true",
+        help="Не сохранять веса модели, оставить только JSON с метриками.",
     )
     return parser.parse_args()
 
@@ -260,6 +266,7 @@ def main() -> None:
     # Проверим, что входные файлы/папки существуют.
     validate_paths(args)
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.metrics_dir.mkdir(parents=True, exist_ok=True)
 
     # Автовыбор устройства: CUDA -> MPS -> CPU
     device = get_default_device()
@@ -364,25 +371,26 @@ def main() -> None:
             best_epoch = epoch
             best_per_class_f1 = per_class_f1
             epochs_without_improvement = 0
-            torch.save(
-                build_checkpoint(
-                    model=model,
-                    model_name="efficientnet",
-                    epoch=best_epoch,
-                    best_metric=best_macro_f1,
-                    optimizer=optimizer,
-                    checkpoint_path=checkpoint_path,
-                    extra={
-                        "variant": args.variant,
-                        "num_classes": args.num_classes,
-                        "image_size": args.image_size,
-                        "use_weighted_sampling": args.use_weighted_sampling,
-                        "per_class_f1": best_per_class_f1,
-                        "idx_to_class": idx_to_class,
-                    },
-                ),
-                checkpoint_path,
-            )
+            if not args.no_save_checkpoint:
+                torch.save(
+                    build_checkpoint(
+                        model=model,
+                        model_name="efficientnet",
+                        epoch=best_epoch,
+                        best_metric=best_macro_f1,
+                        optimizer=optimizer,
+                        checkpoint_path=checkpoint_path,
+                        extra={
+                            "variant": args.variant,
+                            "num_classes": args.num_classes,
+                            "image_size": args.image_size,
+                            "use_weighted_sampling": args.use_weighted_sampling,
+                            "per_class_f1": best_per_class_f1,
+                            "idx_to_class": idx_to_class,
+                        },
+                    ),
+                    checkpoint_path,
+                )
         else:
             epochs_without_improvement += 1
 
@@ -402,7 +410,7 @@ def main() -> None:
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
         "best_per_class_f1": best_per_class_f1,
-        "checkpoint": to_project_relative_path(checkpoint_path),
+        "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(checkpoint_path),
         "history": history,
         "stop_reason": stop_reason,
         "hyperparameters": {
@@ -419,13 +427,14 @@ def main() -> None:
             "plateau_patience": args.plateau_patience,
             "plateau_factor": args.plateau_factor,
             "plateau_min_lr": args.plateau_min_lr,
+            "save_checkpoint": not args.no_save_checkpoint,
         },
     }
-    metrics_path = args.output_dir / f"efficientnet_{args.variant}_metrics.json"
+    metrics_path = args.metrics_dir / f"efficientnet_{args.variant}_metrics.json"
     metrics_path.write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # Также добавляем короткую строку в общий CSV для сравнения экспериментов.
-    comparison_path = args.output_dir / "model_comparison.csv"
+    comparison_path = args.metrics_dir / "model_comparison.csv"
     save_comparison_row(
         comparison_path,
         {
@@ -434,13 +443,16 @@ def main() -> None:
             "num_classes": args.num_classes,
             "best_epoch": best_epoch,
             "best_macro_f1": best_macro_f1,
-            "checkpoint": to_project_relative_path(checkpoint_path),
+            "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(checkpoint_path),
         },
     )
 
     print(f"best_macro_f1={best_macro_f1:.4f}")
     print_per_class_f1(best_per_class_f1)
-    print(f"checkpoint={checkpoint_path}")
+    if args.no_save_checkpoint:
+        print("checkpoint=не сохранялся")
+    else:
+        print(f"checkpoint={checkpoint_path}")
     print(f"metrics={metrics_path}")
 
 

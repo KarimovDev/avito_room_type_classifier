@@ -6,44 +6,70 @@ from pathlib import Path
 import sys
 import argparse
 from sklearn.metrics import f1_score
-import json
-import os
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
-    sys.path.append(str(PROJECT_ROOT))
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.device import get_default_device 
 from src.dataloaders import create_dataloaders
 from src.labels import load_label_mapping
-from src.training_helpers import build_checkpoint, to_project_relative_path
+from src.training_helpers import build_checkpoint, save_json, set_seed, to_project_relative_path
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Train ConvNeXt Nano on room type dataset")
+    parser.add_argument("--num-classes", type=int, default=19)
+    parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--num-workers", type=int, default=0)
+    parser.add_argument("--image-size", type=int, default=224)
+    parser.add_argument("--learning-rate", type=float, default=2e-5)
+    parser.add_argument("--weight-decay", type=float, default=0.1)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--train-csv", type=Path, default=PROJECT_ROOT / "data" / "processed" / "train_df.csv")
+    parser.add_argument("--val-csv", type=Path, default=PROJECT_ROOT / "data" / "processed" / "val_df.csv")
+    parser.add_argument("--train-images", type=Path, default=PROJECT_ROOT / "data" / "raw" / "train_images")
+    parser.add_argument("--val-images", type=Path, default=PROJECT_ROOT / "data" / "raw" / "val_images")
+    parser.add_argument("--output-dir", type=Path, default=PROJECT_ROOT / "outputs" / "models" / "convnext_nano")
+    parser.add_argument("--metrics-dir", type=Path, default=PROJECT_ROOT / "reports" / "metrics" / "convnext_nano")
+    parser.add_argument("--no-pretrained", action="store_true")
+    parser.add_argument("--no-weighted-sampling", action="store_true")
+    parser.add_argument("--no-save-checkpoint", action="store_true")
+    return parser.parse_args()
+
+
+def validate_paths(args):
+    paths = {
+        "--train-csv": args.train_csv,
+        "--val-csv": args.val_csv,
+        "--train-images": args.train_images,
+        "--val-images": args.val_images,
+    }
+    missing = [f"{name}: {path}" for name, path in paths.items() if not path.exists()]
+    if missing:
+        raise FileNotFoundError("Не найдены входные файлы/папки:\n" + "\n".join(missing))
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=30)
-    args = parser.parse_args()
+    args = parse_args()
+    validate_paths(args)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.metrics_dir.mkdir(parents=True, exist_ok=True)
+    set_seed(args.seed)
 
     DEVICE = get_default_device()
     print(f"Используемое устройство: {DEVICE}")
-    
-    BATCH_SIZE = 32
-    EPOCHS = args.epochs
-  
-    DATA_DIR = PROJECT_ROOT / "data"
-    train_csv = DATA_DIR / "processed" / "train_df.csv"
-    train_imgs = DATA_DIR / "raw" / "train_images"
-    val_imgs = DATA_DIR / "raw" / "val_images"
-
-    save_dir = PROJECT_ROOT / "outputs"
-    save_dir.mkdir(exist_ok=True)
 
     train_loader, val_loader = create_dataloaders(
-        batch_size=BATCH_SIZE,
-        image_size=224,
-        num_workers=0,
-        train_csv_path=str(train_csv),
-        train_image_root=str(train_imgs),
-        val_image_root=str(val_imgs)
+        batch_size=args.batch_size,
+        image_size=args.image_size,
+        num_workers=args.num_workers,
+        train_csv_path=args.train_csv,
+        val_csv_path=args.val_csv,
+        train_image_root=args.train_images,
+        val_image_root=args.val_images,
+        use_weighted_sampling=not args.no_weighted_sampling,
+        seed=args.seed,
     )
 
     print(f"ИТОГО: Объектов в Train: {len(train_loader.dataset)}")
@@ -51,22 +77,22 @@ def main():
     print(f"Инициализация ConvNeXt Nano...")
     model = timm.create_model(
         'convnext_nano', 
-        pretrained=True, 
-        num_classes=19, 
+        pretrained=not args.no_pretrained, 
+        num_classes=args.num_classes, 
         drop_rate=0.5, 
         drop_path_rate=0.3
     ).to(DEVICE)
 
     criterion = nn.CrossEntropyLoss(label_smoothing=0.15)
-    optimizer = optim.AdamW(model.parameters(), lr=2e-5, weight_decay=0.1)
+    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.2, patience=3)
 
-    print(f"Начало обучения на {EPOCHS} эпох...")
+    print(f"Начало обучения на {args.epochs} эпох...")
     
     best_macro_f1 = 0.0
     idx_to_class = {str(class_id): label for class_id, label in load_label_mapping().items()}
 
-    for epoch in range(EPOCHS):
+    for epoch in range(args.epochs):
         model.train()
         train_loss = 0.0
         for images, targets in train_loader:
@@ -105,41 +131,52 @@ def main():
 
         scheduler.step(macro_f1)
 
-        print(f"Эпоха {epoch+1}/{EPOCHS} | Train Loss: {epoch_train_loss:.4f}")
+        print(f"Эпоха {epoch+1}/{args.epochs} | Train Loss: {epoch_train_loss:.4f}")
         print(f"Val Loss: {epoch_val_loss:.4f} | Acc: {val_acc:.2f}% | Macro F1: {macro_f1:.4f}")
 
         if macro_f1 > best_macro_f1:
             best_macro_f1 = macro_f1
-            checkpoint_path = save_dir / "best_model_ConvNeXt_Nano.pth"
-            torch.save(
-                build_checkpoint(
-                    model=model,
-                    model_name="convnext_nano",
-                    epoch=epoch + 1,
-                    best_metric=best_macro_f1,
-                    optimizer=optimizer,
-                    checkpoint_path=checkpoint_path,
-                    extra={
-                        "num_classes": 19,
-                        "image_size": 224,
-                        "idx_to_class": idx_to_class,
-                    },
-                ),
-                checkpoint_path,
-            )
+            checkpoint_path = args.output_dir / "convnext_nano_best.pt"
+            if not args.no_save_checkpoint:
+                torch.save(
+                    build_checkpoint(
+                        model=model,
+                        model_name="convnext_nano",
+                        epoch=epoch + 1,
+                        best_metric=best_macro_f1,
+                        optimizer=optimizer,
+                        checkpoint_path=checkpoint_path,
+                        extra={
+                            "num_classes": args.num_classes,
+                            "image_size": args.image_size,
+                            "idx_to_class": idx_to_class,
+                        },
+                    ),
+                    checkpoint_path,
+                )
             
             metrics = {
                 "epoch": int(epoch + 1),
+                "model": "convnext_nano",
                 "train_loss": float(epoch_train_loss),
                 "val_loss": float(epoch_val_loss),
-                "accuracy": float(val_acc),
+                "accuracy": float(val_acc / 100),
                 "macro_f1": float(macro_f1),
-                "checkpoint": to_project_relative_path(checkpoint_path),
+                "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(checkpoint_path),
+                "hyperparameters": {
+                    "epochs": args.epochs,
+                    "batch_size": args.batch_size,
+                    "image_size": args.image_size,
+                    "learning_rate": args.learning_rate,
+                    "weight_decay": args.weight_decay,
+                    "seed": args.seed,
+                    "pretrained": not args.no_pretrained,
+                    "weighted_sampling": not args.no_weighted_sampling,
+                    "save_checkpoint": not args.no_save_checkpoint,
+                },
             }
-            
-            with open(save_dir / "best_metrics_convnext.json", "w", encoding="utf-8") as f:
-                json.dump(metrics, f, indent=4)
-                print(f"Найдена лучшая модель (F1: {best_macro_f1:.4f})")
+            save_json(metrics, args.metrics_dir / "convnext_nano_metrics.json")
+            print(f"Найдена лучшая модель (F1: {best_macro_f1:.4f})")
 
 if __name__ == "__main__":
     main()

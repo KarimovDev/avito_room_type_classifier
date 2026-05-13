@@ -1,21 +1,17 @@
-import os
+import argparse
 import copy
 import sys
 from pathlib import Path
 
 import pandas as pd
-from PIL import Image
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader, random_split
-from torchvision import transforms, models
+from torchvision import models
 from torchvision.models import ResNet50_Weights
-from torch.utils.data import default_collate
-from torchvision.transforms import v2
 
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import classification_report
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -24,47 +20,56 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.dataloaders import create_dataloaders
 from src.metrics import calculate_macro_f1
 from src.device import get_default_device
-from src.training_helpers import build_checkpoint, set_seed
+from src.training_helpers import build_checkpoint, save_json, set_seed, to_project_relative_path
 
-# настройки
-# - пути к данным
-# - batch size
-# - число эпох
-# - learning rate
-# - долю validation
-# - путь сохранения модели
-DATA_DIR_PROCESSED = PROJECT_ROOT/Path("./data/processed").resolve()
-DATA_DIR_RAW = PROJECT_ROOT/Path("./data/raw").resolve()
-CSV_PATH = os.path.join(DATA_DIR_PROCESSED, 'train_df.csv')
-CSV_PATH_VAL = os.path.join(DATA_DIR_PROCESSED, 'val_df.csv')
-IMAGES_DIR = os.path.join(DATA_DIR_RAW, 'train_images')
-VAL_DIR = os.path.join(DATA_DIR_RAW, 'val_images')
 
-BATCH_SIZE = 32           # Можно увеличить, если хватает GPU памяти
-NUM_WORKERS = 0           # В Colab обычно 2-4 достаточно
-NUM_EPOCHS = 15           # Для старта 10, потом можно 15-30
-LEARNING_RATE = 1e-4      # Хороший старт для fine-tuning ResNet50
-RANDOM_SEED = 42
-MODEL_SAVE_PATH = PROJECT_ROOT/Path("./outputs/models/best_resnet50_avito.pth").resolve()
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Train ResNet50 on room type dataset")
+    parser.add_argument("--num-classes", type=int, default=19)
+    parser.add_argument("--epochs", type=int, default=15)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--num-workers", type=int, default=0)
+    parser.add_argument("--image-size", type=int, default=224)
+    parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--train-csv", type=Path, default=PROJECT_ROOT / "data" / "processed" / "train_df.csv")
+    parser.add_argument("--val-csv", type=Path, default=PROJECT_ROOT / "data" / "processed" / "val_df.csv")
+    parser.add_argument("--train-images", type=Path, default=PROJECT_ROOT / "data" / "raw" / "train_images")
+    parser.add_argument("--val-images", type=Path, default=PROJECT_ROOT / "data" / "raw" / "val_images")
+    parser.add_argument("--output-dir", type=Path, default=PROJECT_ROOT / "outputs" / "models" / "resnet50")
+    parser.add_argument("--metrics-dir", type=Path, default=PROJECT_ROOT / "reports" / "metrics" / "resnet50")
+    parser.add_argument("--no-weighted-sampling", action="store_true")
+    parser.add_argument("--no-save-checkpoint", action="store_true")
+    return parser.parse_args()
 
-DEVICE = get_default_device()
-print(DEVICE)
+
+def validate_paths(args: argparse.Namespace) -> None:
+    paths = {
+        "--train-csv": args.train_csv,
+        "--val-csv": args.val_csv,
+        "--train-images": args.train_images,
+        "--val-images": args.val_images,
+    }
+    missing = [f"{name}: {path}" for name, path in paths.items() if not path.exists()]
+    if missing:
+        raise FileNotFoundError("Не найдены входные файлы/папки:\n" + "\n".join(missing))
 
 
 # загрузка и разбиение
-def load_dataset():
+def load_dataset(args: argparse.Namespace):
     train_loader, val_loader = create_dataloaders(
-        train_csv_path=None,
-        val_csv_path=None,
-        train_image_root=None,
-        val_image_root=None,
-        batch_size=BATCH_SIZE,
-        num_workers=NUM_WORKERS,
-        image_size=224,
-        use_weighted_sampling=True,
+        train_csv_path=args.train_csv,
+        val_csv_path=args.val_csv,
+        train_image_root=args.train_images,
+        val_image_root=args.val_images,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        image_size=args.image_size,
+        use_weighted_sampling=not args.no_weighted_sampling,
+        seed=args.seed,
     )
 
-    classes_df = pd.read_csv(CSV_PATH, usecols=["result", "label"]).dropna()
+    classes_df = pd.read_csv(args.train_csv, usecols=["result", "label"]).dropna()
     classes_df["result"] = classes_df["result"].astype(int)
     classes = (
         classes_df.sort_values("result")
@@ -187,11 +192,23 @@ def evaluate_and_print_report(model, loader, criterion, device, classes):
 
 # Лучшую модель сохраняем по val_f1_macro, а не по accuracy.
 # Это часто лучше для многоклассовой задачи.
-def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs, classes):
+def train_model(
+    model,
+    train_loader,
+    val_loader,
+    criterion,
+    optimizer,
+    scheduler,
+    device,
+    args: argparse.Namespace,
+    classes,
+):
     best_model_wts = copy.deepcopy(model.state_dict())
     best_val_f1 = -1.0
+    best_metrics = {}
+    checkpoint_path = args.output_dir / "resnet50_best.pt"
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.epochs):
         train_loss, train_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
         val_loss, val_acc, val_f1_macro, all_targets, all_preds = validate(model, val_loader, criterion, device)
 
@@ -199,7 +216,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler
             scheduler.step(val_loss)
 
         print(
-            f'Epoch [{epoch + 1}/{num_epochs}] -- '
+            f'Epoch [{epoch + 1}/{args.epochs}] -- '
             f'train_loss: {train_loss:.4f} -- train_acc: {train_acc:.4f} -- '
             f'val_loss: {val_loss:.4f} -- val_acc: {val_acc:.4f} -- '
             f'val_f1_macro: {val_f1_macro:.4f}'
@@ -209,36 +226,49 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler
         if val_f1_macro > best_val_f1:
             best_val_f1 = val_f1_macro
             best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(
-                build_checkpoint(
-                    model=model,
-                    model_name="resnet50",
-                    epoch=epoch + 1,
-                    best_metric=best_val_f1,
-                    optimizer=optimizer,
-                    checkpoint_path=MODEL_SAVE_PATH,
-                    extra={
-                        "num_classes": len(classes),
-                        "image_size": 224,
-                        "idx_to_class": {str(i): class_name for i, class_name in enumerate(classes)},
-                    },
-                ),
-                MODEL_SAVE_PATH,
-            )
-            print(f'Best model saved to: {MODEL_SAVE_PATH}')
+            if not args.no_save_checkpoint:
+                torch.save(
+                    build_checkpoint(
+                        model=model,
+                        model_name="resnet50",
+                        epoch=epoch + 1,
+                        best_metric=best_val_f1,
+                        optimizer=optimizer,
+                        checkpoint_path=checkpoint_path,
+                        extra={
+                            "num_classes": len(classes),
+                            "image_size": args.image_size,
+                            "idx_to_class": {str(i): class_name for i, class_name in enumerate(classes)},
+                        },
+                    ),
+                    checkpoint_path,
+                )
+                print(f'Best model saved to: {checkpoint_path}')
+            best_metrics = {
+                "epoch": epoch + 1,
+                "train_loss": train_loss,
+                "train_accuracy": train_acc,
+                "val_loss": val_loss,
+                "accuracy": val_acc,
+                "macro_f1": best_val_f1,
+            }
 
     model.load_state_dict(best_model_wts)
-    return model
+    return model, best_val_f1, best_metrics
 
 def main():
-    set_seed(RANDOM_SEED)
-    MODEL_SAVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    args = parse_args()
+    validate_paths(args)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.metrics_dir.mkdir(parents=True, exist_ok=True)
+    set_seed(args.seed)
 
-    print(CSV_PATH)
-    print(IMAGES_DIR)
-    print(f'DEVICE: {DEVICE}')
+    device = get_default_device()
+    print(args.train_csv)
+    print(args.train_images)
+    print(f'DEVICE: {device}')
 
-    train_loader, val_loader, classes = load_dataset()
+    train_loader, val_loader, classes = load_dataset(args)
 
     print('Classes:')
     for i, cls_name in enumerate(classes):
@@ -246,14 +276,14 @@ def main():
 
     # Количество классов определяется автоматически
     model = build_model(num_classes=len(classes))
-    model = model.to(DEVICE)
+    model = model.to(device)
 
     # Если классы сильно несбалансированы, можно добавить class weights.
     criterion = nn.CrossEntropyLoss()
 
     # Adam — хороший старт.
     # Потом можно попробовать AdamW.
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
     # Уменьшает learning rate, если val_loss не улучшается.
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -263,22 +293,39 @@ def main():
         patience=2
     )
 
-    model = train_model(
+    model, best_val_f1, best_metrics = train_model(
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
-        device=DEVICE,
-        num_epochs=NUM_EPOCHS,
+        device=device,
+        args=args,
         classes=classes,
     )
+
+    metrics = {
+        "model": "resnet50",
+        "best_macro_f1": best_val_f1,
+        "best_epoch_metrics": best_metrics,
+        "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(args.output_dir / "resnet50_best.pt"),
+        "hyperparameters": {
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+            "image_size": args.image_size,
+            "learning_rate": args.learning_rate,
+            "seed": args.seed,
+            "weighted_sampling": not args.no_weighted_sampling,
+            "save_checkpoint": not args.no_save_checkpoint,
+        },
+    }
+    save_json(metrics, args.metrics_dir / "resnet50_metrics.json")
 
     print('Training finished.')
 
     print('\nBest model evaluation on validation set:')
-    evaluate_and_print_report(model, val_loader, criterion, DEVICE, classes)
+    evaluate_and_print_report(model, val_loader, criterion, device, classes)
 
 if __name__ == '__main__':
     main()

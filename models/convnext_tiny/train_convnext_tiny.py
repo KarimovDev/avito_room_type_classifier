@@ -289,7 +289,7 @@ def save_metrics_report(metrics: dict[str, Any], metrics_dir: Path, model_name: 
         "run_id": rid,
         "model": metrics["model"],
         "model_name": model_name,
-        "metrics_dir": str(metrics_dir.resolve()),
+        "metrics_dir": to_project_relative_path(metrics_dir),
         "best_epoch": metrics["best_epoch"],
         "best_macro_f1": metrics["best_macro_f1"],
         "best_accuracy": be.get("accuracy"),
