@@ -1,0 +1,61 @@
+services:
+
+  base:
+    build: .
+    image: room_type_classifier
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./reports:/app/reports
+    shm_size: "2g"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  train-densenet121:
+    extends:
+      service: base
+    command: >
+      python -m models.densenet121.train_densenet121
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-resnet18:
+    extends:
+      service: base
+    command: >
+      python -m models.resnet18.train_resnet18
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-resnet50:
+    extends:
+      service: base
+    # resnet50.py пока без argparse — EPOCHS и BATCH игнорируются
+    command: python models/resnet50/resnet50.py
+
+  train-efficientnet:
+    extends:
+      service: base
+    command: >
+      python -m models.efficientNet.train_efficientnet
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-convnext:
+    extends:
+      service: base
+    command: >
+      python -m models.convnext_nano.train_convnext
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  gradcam:
+    extends:
+      service: base
+    command: python models/efficientNet/grad_cam.py
+
+  yolo:
+    extends:
+      service: base
+    command: python models/yolo/main_yolo.py
