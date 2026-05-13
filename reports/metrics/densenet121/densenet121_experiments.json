@@ -8,7 +8,7 @@
     "best_train_loss": 0.8901878870766738,
     "best_val_loss": 1.3656852086385092,
     "stop_reason": "stage3_complete",
-    "checkpoint": "C:\\Users\\pantp\\room_type_classifier\\outputs\\models\\densenet121\\densenet121_2026-05-08_19-25-06_best.pth",
+    "checkpoint": "outputs/models/densenet121/densenet121_2026-05-08_19-25-06_best.pth",
     "epochs_stage1": 2,
     "epochs_stage2": 8,
     "epochs_stage3": 5,
@@ -20,7 +20,7 @@
     "pretrained": true,
     "class_weights": true,
     "weighted_sampling": true,
-    "metrics_json": "C:\\Users\\pantp\\room_type_classifier\\reports\\metrics\\densenet121\\densenet121_metrics.json"
+    "metrics_json": "reports/metrics/densenet121/densenet121_metrics.json"
   },
   {
     "run_id": "2026-05-12_10-09-35",
@@ -31,7 +31,7 @@
     "best_train_loss": 1.9009404038054956,
     "best_val_loss": 1.3590544389103942,
     "stop_reason": "max_epochs",
-    "checkpoint": "/app/outputs/models/densenet121/densenet121_best.pt",
+    "checkpoint": "outputs/models/densenet121/densenet121_best.pt",
     "epochs": 1,
     "batch_size": 4,
     "image_size": 224,
@@ -43,7 +43,7 @@
     "weighted_sampling": true,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/app/reports/metrics/densenet121/densenet121_metrics.json"
+    "metrics_json": "reports/metrics/densenet121/densenet121_metrics.json"
   },
   {
     "run_id": "2026-05-12_10-20-59",
@@ -54,7 +54,7 @@
     "best_train_loss": 0.28642691072198806,
     "best_val_loss": 0.9772963366418514,
     "stop_reason": "early_stopping",
-    "checkpoint": "/app/outputs/models/densenet121/densenet121_best.pt",
+    "checkpoint": "outputs/models/densenet121/densenet121_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -66,7 +66,7 @@
     "weighted_sampling": true,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/app/reports/metrics/densenet121/densenet121_metrics.json"
+    "metrics_json": "reports/metrics/densenet121/densenet121_metrics.json"
   },
   {
     "run_id": "2026-05-12_20-44-41",
@@ -100,7 +100,7 @@
     "best_train_loss": 0.5003483811705429,
     "best_val_loss": 0.9329663937446706,
     "stop_reason": "early_stopping",
-    "checkpoint": "/app/outputs/models/densenet121/densenet121_best.pt",
+    "checkpoint": "outputs/models/densenet121/densenet121_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -112,7 +112,7 @@
     "weighted_sampling": true,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/app/reports/metrics/densenet121/densenet121_metrics.json"
+    "metrics_json": "reports/metrics/densenet121/densenet121_metrics.json"
   },
   {
     "run_id": "2026-05-13_09-38-00",
@@ -123,7 +123,7 @@
     "best_train_loss": 0.11150449679099628,
     "best_val_loss": 1.0505535617564459,
     "stop_reason": "early_stopping",
-    "checkpoint": "/app/outputs/models/densenet121/densenet121_best.pt",
+    "checkpoint": "outputs/models/densenet121/densenet121_best.pt",
     "epochs": 30,
     "batch_size": 32,
     "image_size": 224,
@@ -135,6 +135,6 @@
     "weighted_sampling": true,
     "early_stopping_patience": 3,
     "early_stopping_min_delta": 0.0001,
-    "metrics_json": "/app/reports/metrics/densenet121/densenet121_metrics.json"
+    "metrics_json": "reports/metrics/densenet121/densenet121_metrics.json"
   }
 ]

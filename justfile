@@ -87,6 +87,10 @@ prepare-data-heuristics-limited HEURISTICS MAX_ROWS:
 lock:
     uv lock
 
+# Проверить формат метрик и чекпоинтов
+check-training-outputs:
+    uv run --group data python -m src.validate_training_outputs --allow-empty-checkpoints
+
 # Переустановить torch/torchvision из обычного PyPI
 pytorch-pypi:
     {{PYTORCH_PIP}} install --upgrade --reinstall torch torchvision

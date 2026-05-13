@@ -3,8 +3,8 @@
   "model": "convnext_tiny",
   "hyperparameters": {
     "model_name": "convnext_tiny",
-    "config": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\models\\convnext_tiny\\train_config.json",
-    "metrics_dir": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\reports\\metrics\\convnext_tiny",
+    "config": "models/convnext_tiny/train_config.json",
+    "metrics_dir": "reports/metrics/convnext_tiny",
     "epochs": 30,
     "batch_size": 16,
     "image_size": 224,
@@ -189,7 +189,7 @@
       }
     ]
   },
-  "checkpoint": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\outputs\\models\\convnext_tiny\\convnext_tiny_best.pt",
-  "last_checkpoint": "C:\\Users\\Ivan\\code\\python\\SkillFactory\\Stage 2\\Avito\\room_type_classifier\\outputs\\models\\convnext_tiny\\convnext_tiny_last.pt",
+  "checkpoint": "outputs/models/convnext_tiny/convnext_tiny_best.pt",
+  "last_checkpoint": "outputs/models/convnext_tiny/convnext_tiny_last.pt",
   "stop_reason": "early_stopping"
 }

@@ -178,6 +178,6 @@
       }
     ]
   },
-  "checkpoint": "/app/outputs/models/resnet18/resnet18_best.pt",
+  "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
   "stop_reason": "max_epochs"
 }

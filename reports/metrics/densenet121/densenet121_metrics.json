@@ -178,6 +178,6 @@
       }
     ]
   },
-  "checkpoint": "/app/outputs/models/densenet121/densenet121_best.pt",
+  "checkpoint": "outputs/models/densenet121/densenet121_best.pt",
   "stop_reason": "early_stopping"
 }
