@@ -19,7 +19,15 @@ RUN apt-get update \
 COPY pyproject.toml uv.lock ./
 
 RUN uv venv --python 3.12 \
-    && uv sync --frozen --only-group streamlit
+    && uv sync --frozen \
+      --group streamlit \
+      --group yolo \
+      --group efficientnet \
+      --group resnet18 \
+      --group resnet50 \
+      --group densenet121 \
+      --group convnext_nano \
+      --group convnext_tiny
 
 COPY . .
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import os
-import time
 import sys
 import timm
 from dataclasses import dataclass
@@ -10,8 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 import torch.nn as nn
-from torchvision import transforms, models
-from torchvision.transforms import v2
+from torchvision import models
 
 import pandas as pd
 import streamlit as st
@@ -20,8 +18,9 @@ from PIL import Image, ImageOps
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
-print(ROOT_DIR)
 
+from models.convnext_tiny.model import build_convnext_tiny
+from models.densenet121.densenet121 import build_densenet121
 from src.device import get_default_device
 from src.labels import load_label_mapping
 from src.transforms import get_val_transforms
@@ -46,7 +45,9 @@ EFFICIENTNET_B1_CHECKPOINT_PATH = Path(
 )
 RESNET50_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "best_resnet50_avito.pth"
 RESNET18_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "resnet18" / "resnet18_best.pt"
+DENSENET121_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "densenet121" / "densenet121_best.pt"
 CONVNEXT_NANO_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "best_model_convnext_nano.pth"
+CONVNEXT_TINY_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "convnext_tiny" / "convnext_tiny_best.pt"
 
 
 @dataclass(frozen=True)
@@ -374,6 +375,69 @@ def resnet18_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, fl
     raise RuntimeError(f"ResNet18 checkpoint is unavailable: {checkpoint_path}")
 
 
+@st.cache_resource(show_spinner="Загружаем DenseNet121...")
+def load_densenet121_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    """Загружаем DenseNet121 из checkpoint"""
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+    if not isinstance(checkpoint, dict) or "model_state_dict" not in checkpoint:
+        return None
+
+    state_dict = checkpoint["model_state_dict"]
+    num_classes = int(checkpoint.get("num_classes", len(load_room_type_labels())))
+    image_size = int(checkpoint.get("image_size", 224))
+
+    model = build_densenet121(num_classes=num_classes, pretrained=False)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+
+@st.cache_data(show_spinner=False)
+def _predict_densenet121_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание DenseNet121 с кэшированием"""
+    loaded_model = load_densenet121_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+
+def densenet121_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер для DenseNet121"""
+    prediction = _predict_densenet121_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"DenseNet121 checkpoint is unavailable: {checkpoint_path}")
+
+
 def num_classes_convnext_nano(state_dict: dict) -> int:
     """Число классов из весов головы timm ConvNeXt (plain state_dict без метаданных)."""
     if "head.fc.weight" in state_dict:
@@ -462,6 +526,70 @@ def convnext_nano_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[st
         return prediction
     raise RuntimeError(f"Convnext Nano checkpoint is unavailable: {checkpoint_path}")
 
+
+@st.cache_resource(show_spinner="Загружаем convnext tiny...")
+def load_convnext_tiny_model(checkpoint_path: str) -> tuple[object, object, int] | None:
+    """Загружаем ConvNeXt Tiny из checkpoint"""
+    path = Path(checkpoint_path)
+    if not path.exists():
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    device = get_default_device()
+    checkpoint = torch.load(path, map_location=device, weights_only=False)
+    if not isinstance(checkpoint, dict) or "model_state_dict" not in checkpoint:
+        return None
+
+    state_dict = checkpoint["model_state_dict"]
+    num_classes = int(checkpoint.get("num_classes", len(load_room_type_labels())))
+    image_size = int(checkpoint.get("image_size", 224))
+
+    model = build_convnext_tiny(num_classes=num_classes, pretrained=False)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model, device, image_size
+
+
+@st.cache_data(show_spinner=False)
+def _predict_convnext_tiny_cached(image_bytes: bytes, checkpoint_path: str) -> tuple[str, float] | None:
+    """Предсказание convnext tiny с кэшированием"""
+    loaded_model = load_convnext_tiny_model(checkpoint_path)
+    if loaded_model is None:
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    model, device, image_size = loaded_model
+    preprocess = get_val_transforms(image_size=image_size)
+    image = load_rgb_image(image_bytes)
+    tensor = preprocess(image).unsqueeze(0).to(device)
+
+    with torch.inference_mode():
+        probabilities = torch.softmax(model(tensor), dim=1)[0]
+        probability, class_index = torch.max(probabilities, dim=0)
+
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+
+def convnext_tiny_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[str, float]:
+    """Враппер для ConvNeXt Tiny"""
+    prediction = _predict_convnext_tiny_cached(image_bytes, str(checkpoint_path))
+    if prediction is not None:
+        return prediction
+    raise RuntimeError(f"Convnext Tiny checkpoint is unavailable: {checkpoint_path}")
+
+
 MODELS = [
     # Список моделей, которые можно включать/выключать в сайдбаре
     ModelConfig(
@@ -500,11 +628,25 @@ MODELS = [
         is_available=RESNET18_MODEL_PATH.exists,
     ),
     ModelConfig(
+        key="densenet121",
+        title="DenseNet121",
+        description="Обученный DenseNet121 checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: densenet121_predict(image_bytes, DENSENET121_MODEL_PATH),
+        is_available=DENSENET121_MODEL_PATH.exists,
+    ),
+    ModelConfig(
         key="convnext_nano",
         title="ConvNext Nano",
         description="Обученный ConvNext Nano checkpoint на локальном датасете.",
         predictor=lambda image_bytes: convnext_nano_predict(image_bytes, CONVNEXT_NANO_MODEL_PATH),
         is_available=CONVNEXT_NANO_MODEL_PATH.exists,
+    ),
+    ModelConfig(
+        key="convnext_tiny",
+        title="ConvNext Tiny",
+        description="Обученный ConvNext Tiny checkpoint на локальном датасете.",
+        predictor=lambda image_bytes: convnext_tiny_predict(image_bytes, CONVNEXT_TINY_MODEL_PATH),
+        is_available=CONVNEXT_TINY_MODEL_PATH.exists,
     ),
 ]
 
@@ -549,10 +691,18 @@ def render_sidebar() -> list[ModelConfig]:
         st.sidebar.success("ResNet18 checkpoint найден")
     else:
         st.sidebar.info("ResNet18 checkpoint не найден")
+    if DENSENET121_MODEL_PATH.exists():
+        st.sidebar.success("DenseNet121 checkpoint найден")
+    else:
+        st.sidebar.info("DenseNet121 checkpoint не найден")
     if CONVNEXT_NANO_MODEL_PATH.exists():
         st.sidebar.success("ConvNext Nano checkpoint найден")
     else:
-        st.sidebar.info("ConvNext Nano checkpoint не найден")    
+        st.sidebar.info("ConvNext Nano checkpoint не найден")
+    if CONVNEXT_TINY_MODEL_PATH.exists():
+        st.sidebar.success("ConvNext Tiny checkpoint найден")
+    else:
+        st.sidebar.info("ConvNext Tiny checkpoint не найден")
 
     return selected_models
 

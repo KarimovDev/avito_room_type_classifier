@@ -26,7 +26,7 @@ install-data: setup
 
 # Зависимости для Streamlit-приложения
 install-streamlit: setup
-    uv sync --only-group streamlit
+    uv sync --group streamlit --group yolo --group efficientnet --group resnet18 --group resnet50 --group densenet121 --group convnext_nano --group convnext_tiny
 
 # Зависимости для обучения EfficientNet
 install-efficientnet: setup
@@ -157,7 +157,7 @@ grad-cam-efficientnet:
 
 # Запустить Streamlit-приложение
 run-streamlit:
-    uv run --group streamlit --group efficientnet --group yolo streamlit run streamlit/app.py
+    uv run --group streamlit --group yolo --group efficientnet --group resnet18 --group resnet50 --group densenet121 --group convnext_nano --group convnext_tiny streamlit run streamlit/app.py
 
 # Запустить произвольную команду через uv
 run *ARGS:
