@@ -1051,7 +1051,24 @@ convnext-nano = [
     { name = "torch" },
     { name = "torchvision" },
 ]
+convnext-tiny = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pillow" },
+    { name = "scikit-learn" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+]
 data = [
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pillow" },
+    { name = "scikit-learn" },
+    { name = "torch" },
+    { name = "torchvision" },
+]
+densenet121 = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "pillow" },
@@ -1118,7 +1135,24 @@ convnext-nano = [
     { name = "torch", specifier = "==2.5.1" },
     { name = "torchvision", specifier = "==0.20.1" },
 ]
+convnext-tiny = [
+    { name = "numpy", specifier = "==2.4.3" },
+    { name = "pandas", specifier = "==2.3.3" },
+    { name = "pillow", specifier = "==12.1.1" },
+    { name = "scikit-learn", specifier = "==1.5.2" },
+    { name = "torch", specifier = "==2.5.1" },
+    { name = "torchvision", specifier = "==0.20.1" },
+    { name = "tqdm", specifier = "==4.67.3" },
+]
 data = [
+    { name = "numpy", specifier = "==2.4.3" },
+    { name = "pandas", specifier = "==2.3.3" },
+    { name = "pillow", specifier = "==12.1.1" },
+    { name = "scikit-learn", specifier = "==1.5.2" },
+    { name = "torch", specifier = "==2.5.1" },
+    { name = "torchvision", specifier = "==0.20.1" },
+]
+densenet121 = [
     { name = "numpy", specifier = "==2.4.3" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "pillow", specifier = "==12.1.1" },

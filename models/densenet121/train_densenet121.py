@@ -37,11 +37,7 @@ _CLASS_WEIGHT_BOOSTS: dict[int, float] = {
 
 
 def parse_args() -> argparse.Namespace:
-    """Читает параметры запуска обучения из командной строки
-
-    Returns:
-        Namespace с путями, гиперпараметрами и настройками модели
-    """
+    """Читает параметры запуска из командной строки"""
     parser = argparse.ArgumentParser(description="Train DenseNet121 on room type dataset")
     parser.add_argument("--num-classes", type=int, default=19)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -55,47 +51,43 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--val-images", type=Path, default=ROOT_DIR / "data" / "raw" / "val_images")
     parser.add_argument("--output-dir", type=Path, default=ROOT_DIR / "outputs" / "models" / "densenet121")
     parser.add_argument("--metrics-dir", type=Path, default=ROOT_DIR / "reports" / "metrics" / "densenet121")
-    parser.add_argument("--no-pretrained", action="store_true", help="Не использовать веса ImageNet.")
-    parser.add_argument("--no-class-weights", action="store_true", help="Отключить веса классов в loss.")
+    parser.add_argument("--no-pretrained", action="store_true", help="Не использовать веса ImageNet")
+    parser.add_argument("--no-class-weights", action="store_true", help="Отключить веса классов в loss")
     parser.add_argument(
         "--no-weighted-sampling",
         action="store_true",
-        help="Отключить WeightedRandomSampler для train DataLoader.",
+        help="Отключить WeightedRandomSampler для train DataLoader",
     )
     parser.add_argument(
         "--no-save-checkpoint",
         action="store_true",
-        help="Не сохранять веса модели, оставить только JSON с F1-метриками.",
+        help="Не сохранять веса модели, оставить только JSON с F1-метриками",
     )
     # Трехэтапная стратегия обучения
-    parser.add_argument("--epochs-stage1", type=int, default=2, help="Эпох для head-only (этап 1).")
-    parser.add_argument("--epochs-stage2", type=int, default=8, help="Эпох для full fine-tuning (этап 2).")
-    parser.add_argument("--epochs-stage3", type=int, default=5, help="Эпох для дожига (этап 3).")
-    parser.add_argument("--lr-stage1", type=float, default=1e-3, help="LR для head-only (этап 1).")
-    parser.add_argument("--lr-stage2", type=float, default=1e-4, help="LR для full fine-tuning (этап 2).")
-    parser.add_argument("--lr-stage3", type=float, default=3e-5, help="LR для дожига (этап 3).")
-    parser.add_argument("--label-smoothing", type=float, default=0.1, help="Label smoothing для CrossEntropyLoss.")
+    parser.add_argument("--epochs-stage1", type=int, default=2, help="Эпох для head-only")
+    parser.add_argument("--epochs-stage2", type=int, default=8, help="Эпох для full fine-tuning")
+    parser.add_argument("--epochs-stage3", type=int, default=5, help="Эпох для дожига")
+    parser.add_argument("--lr-stage1", type=float, default=1e-3, help="LR для head-only")
+    parser.add_argument("--lr-stage2", type=float, default=1e-4, help="LR для full fine-tuning")
+    parser.add_argument("--lr-stage3", type=float, default=3e-5, help="LR для дожига")
+    parser.add_argument("--label-smoothing", type=float, default=0.1, help="Label smoothing для CrossEntropyLoss")
     parser.add_argument(
         "--early-stopping-patience",
         type=int,
         default=3,
-        help="Сколько эпох ждать улучшения macro-F1. Применяется к этапам 2 и 3. 0 = не останавливать.",
+        help="Сколько эпох ждать улучшения macro-F1, 0 = не останавливать",
     )
     parser.add_argument(
         "--early-stopping-min-delta",
         type=float,
         default=1e-4,
-        help="Минимальный прирост macro-F1, который считается улучшением.",
+        help="Минимальный прирост macro-F1, который считается улучшением",
     )
     return parser.parse_args()
 
 
 def validate_paths(args: argparse.Namespace) -> None:
-    """Проверяет, что входные CSV и папки с изображениями существуют
-
-    Args:
-        args: Параметры запуска из parse_args()
-    """
+    """Проверяет входные CSV и папки с изображениями"""
     paths = {
         "--train-csv": args.train_csv,
         "--val-csv": args.val_csv,
@@ -108,16 +100,7 @@ def validate_paths(args: argparse.Namespace) -> None:
 
 
 def get_class_weights(csv_path: Path, num_classes: int, device: torch.device) -> torch.Tensor:
-    """Считает веса классов для CrossEntropyLoss и применяет буст-множители
-
-    Args:
-        csv_path: Путь к processed train CSV
-        num_classes: Количество классов
-        device: Устройство, на котором будет считаться loss
-
-    Returns:
-        Tensor весов классов на выбранном устройстве
-    """
+    """Считает веса классов для CrossEntropyLoss"""
     targets = pd.read_csv(csv_path)["result"].astype(int)
     counts = torch.bincount(torch.tensor(targets.to_list()), minlength=num_classes).float()
 
@@ -139,18 +122,7 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     device: torch.device,
 ) -> float:
-    """Обучает модель одну эпоху
-
-    Args:
-        model: DenseNet121
-        loader: Train DataLoader
-        criterion: Функция потерь
-        optimizer: Оптимизатор
-        device: CPU/CUDA/MPS
-
-    Returns:
-        Средний train loss за эпоху
-    """
+    """Обучает модель одну эпоху"""
     model.train()
     total_loss = 0.0
 
@@ -177,18 +149,7 @@ def validate(
     device: torch.device,
     num_classes: int,
 ) -> tuple[float, float, float, list[dict[str, object]], list[int], list[int]]:
-    """Проверяет модель на validation и считает F1-метрики
-
-    Args:
-        model: DenseNet121
-        loader: Validation DataLoader
-        criterion: Функция потерь
-        device: CPU/CUDA/MPS
-        num_classes: Количество классов
-
-    Returns:
-        Средний validation loss, accuracy, macro-F1 и F1 по каждому классу
-    """
+    """Проверяет модель на validation"""
     model.eval()
     total_loss = 0.0
     per_class_loss_sum = torch.zeros(num_classes, dtype=torch.float64)
@@ -232,14 +193,7 @@ def validate(
 
 
 def add_label_names(per_class_f1: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Добавляет текстовые названия классов к per-class F1
-
-    Args:
-        per_class_f1: Список метрик по классам
-
-    Returns:
-        Такой же список, но с полем label
-    """
+    """Добавляет названия классов к per-class F1"""
     label_mapping = load_label_mapping()
     return [
         {**item, "label": label_mapping.get(int(item["class_id"]), str(item["class_id"]))}
@@ -248,15 +202,7 @@ def add_label_names(per_class_f1: list[dict[str, object]]) -> list[dict[str, obj
 
 
 def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[Path, Path]:
-    """Сохраняет полный отчет последнего запуска и общий список экспериментов
-
-    Args:
-        metrics: Полный отчет по обучению
-        metrics_dir: Папка для метрик конкретной модели
-
-    Returns:
-        Пути к JSON последнего запуска и JSON со списком экспериментов
-    """
+    """Сохраняет JSON с метриками и список запусков"""
     metrics_dir.mkdir(parents=True, exist_ok=True)
     run_id = str(metrics.get("run_id") or datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
 
@@ -342,11 +288,7 @@ def _run_stage(
     idx_to_class: dict[str, str],
     epoch_offset: int = 0,
 ) -> tuple[float, int | str, dict[str, object], str, list[dict]]:
-    """Запускает один этап обучения (произвольное число эпох, фиксированный оптимизатор)
-
-    Returns:
-        best_macro_f1, best_epoch, best_epoch_metrics, stop_reason, history
-    """
+    """Запускает один этап обучения"""
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
     history: list[dict] = []
@@ -433,7 +375,7 @@ def _run_stage(
         else:
             epochs_without_improvement += 1
 
-        saved_marker = " ✓" if improved else ""
+        saved_marker = " saved" if improved else ""
         print(
             f"  epoch=s{stage_name}_{local_epoch} (global={global_epoch})"
             f"  train_loss={train_loss:.4f}"
@@ -494,7 +436,7 @@ def main() -> None:
 
     # промежуточный чекпоинт после этапа 1 (head-only)
     head_checkpoint = args.output_dir / "densenet121_head_best.pt"
-    # финальный чекпоинт — лучшее за этапы 2 и 3
+    # Финальный чекпоинт за этапы 2 и 3
     finetune_checkpoint = args.output_dir / f"densenet121_{run_id}_best.pt"
 
     best_macro_f1 = -1.0
@@ -504,9 +446,7 @@ def main() -> None:
     idx_to_class = {str(class_id): label for class_id, label in load_label_mapping().items()}
     stop_reason = "max_epochs"
 
-    # ------------------------------------------------------------------
-    # Этап 1: head-only — замораживаем backbone, обучаем только classifier
-    # ------------------------------------------------------------------
+    # Этап 1: обучаем только classifier
     for param in model.parameters():
         param.requires_grad = False
     for param in model.classifier.parameters():
@@ -539,9 +479,7 @@ def main() -> None:
     )
     full_history.extend(history_s1)
 
-    # ------------------------------------------------------------------
-    # Этап 2: full fine-tuning — размораживаем всё, lr уменьшаем
-    # ------------------------------------------------------------------
+    # Этап 2: размораживаем всю модель
     if not args.no_save_checkpoint and head_checkpoint.exists():
         ckpt = torch.load(head_checkpoint, map_location=device, weights_only=True)
         model.load_state_dict(ckpt["model_state_dict"])
@@ -578,9 +516,7 @@ def main() -> None:
     full_history.extend(history_s2)
     stop_reason = stop_reason_s2
 
-    # ------------------------------------------------------------------
-    # Этап 3: дожиг — стартуем от лучшего чекпоинта этапа 2, lr снижаем
-    # ------------------------------------------------------------------
+    # Этап 3: продолжаем от лучшего чекпоинта
     if not args.no_save_checkpoint and finetune_checkpoint.exists():
         ckpt = torch.load(finetune_checkpoint, map_location=device, weights_only=True)
         model.load_state_dict(ckpt["model_state_dict"])
@@ -616,9 +552,7 @@ def main() -> None:
     if stop_reason_s3 == "early_stopping":
         stop_reason = "early_stopping"
 
-    # ------------------------------------------------------------------
     # Сохранение метрик
-    # ------------------------------------------------------------------
     metrics = {
         "run_id": run_id,
         "model": "densenet121",

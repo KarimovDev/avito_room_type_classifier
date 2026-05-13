@@ -16,7 +16,7 @@ DEFAULT_RAW_DIR = os.path.join(ROOT_DIR, "data", "raw")
 
 
 def seed_worker(worker_id, base_seed):
-    # Разводим seed по worker-процессам, чтобы DataLoader был воспроизводимым.
+    # Разводим seed по worker-процессам
     worker_seed = base_seed + worker_id
     random.seed(worker_seed)
     np.random.seed(worker_seed)
@@ -33,7 +33,7 @@ def create_dataloaders(
         image_size=224,              # размер стороны изображения после resize
         use_weighted_sampling=False, # Делать ли балансировку
         seed=None,                   # Фиксирует shuffle, sampler и random transforms
-        pin_memory=False,            # True на CUDA — быстрее перенос батча на GPU
+        pin_memory=False,            # True на CUDA - быстрее перенос батча на GPU
         persistent_workers=False,    # не перезапускать worker между эпохами (только при num_workers>0)
 ):
     train_csv_path = train_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "train_df.csv")
@@ -41,7 +41,6 @@ def create_dataloaders(
     train_image_root = train_image_root or os.path.join(DEFAULT_RAW_DIR, "train_images")
     val_image_root = val_image_root or os.path.join(DEFAULT_RAW_DIR, "val_images")
 
-    # train dataset
     # Для train используем аугментации
     train_dataset = RoomTypeDataset(
         csv_path=train_csv_path,
@@ -49,7 +48,6 @@ def create_dataloaders(
         transform=get_train_transforms(image_size=image_size)
     )
 
-    # validation dataset
     # Для validation используем только resize + normalize (без случайных аугментаций)
     val_dataset = RoomTypeDataset(
         csv_path=val_csv_path,
@@ -81,7 +79,6 @@ def create_dataloaders(
             generator=generator
         )
 
-    # DataLoader для train
     # shuffle=True нужен, чтобы модель не видела данные всегда в одном порядке
     train_loader = DataLoader(
         train_dataset,
@@ -96,7 +93,6 @@ def create_dataloaders(
         persistent_workers=persistent_workers and num_workers > 0,
     )
 
-    # DataLoader для validation
     # shuffle=False, потому что на валидации порядок не важен и лучше держать его стабильным
     val_loader = DataLoader(
         val_dataset,

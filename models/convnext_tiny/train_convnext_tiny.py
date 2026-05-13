@@ -66,7 +66,7 @@ def _resolve_csv(csv_path: Path, default_file: str) -> Path:
         p = csv_path
     if p.exists() and p.is_dir():
         out = p / default_file
-        print(f"CSV: каталог {csv_path} → файл {out}", flush=True)
+        print(f"CSV: каталог {csv_path} -> файл {out}", flush=True)
         return out
     return csv_path
 
@@ -368,7 +368,7 @@ def _log_torch_and_device(device: torch.device) -> None:
             "Поставьте CUDA-сборку в тот же venv, из корня room_type_classifier:\n"
             "  uv pip install torch==2.5.1 torchvision==0.20.1 "
             "--extra-index-url https://download.pytorch.org/whl/cu124\n"
-            "Другая версия CUDA у драйвера — см. https://pytorch.org/get-started/locally/ (например cu121: .../whl/cu121).",
+            "Другая версия CUDA у драйвера - см. https://pytorch.org/get-started/locally/ (например cu121: .../whl/cu121)",
             flush=True,
         )
 
@@ -411,7 +411,7 @@ def main() -> None:
             raise ValueError(f"После исключения класса {excluded} train={nt}, val={nv}")
         inferred = int(pd.read_csv(train_eff)["result"].max()) + 1
         if num_classes != inferred:
-            print(f"num_classes {num_classes} → {inferred} (по train после exclude)", flush=True)
+            print(f"num_classes {num_classes} -> {inferred} (по train после exclude)", flush=True)
             num_classes = inferred
         print(f"Исключён класс {excluded}: train {nt} (−{dt}), val {nv} (−{dv})", flush=True)
 
@@ -482,7 +482,7 @@ def main() -> None:
         if "image_path" in pd.read_csv(train_eff, nrows=1).columns:
             print(
                 "Данные: CSV после preprocess_data (есть image_path). "
-                "train_images/val_images в JSON — каталоги с jpg (обычно data/raw/..._images).",
+                "train_images/val_images в JSON - каталоги с jpg (обычно data/raw/..._images)",
                 flush=True,
             )
     except Exception:
@@ -524,7 +524,7 @@ def main() -> None:
         ck = _load_ckpt(resume_path)
         if int(ck.get("num_classes", num_classes)) != num_classes:
             raise ValueError(
-                f"num_classes в чекпоинте ({ck.get('num_classes')}) ≠ текущему ({num_classes})"
+                f"num_classes в чекпоинте ({ck.get('num_classes')}) != текущему ({num_classes})"
             )
         model.load_state_dict(ck["model_state_dict"], strict=True)
         if ck.get("optimizer_state_dict"):
@@ -552,7 +552,7 @@ def main() -> None:
         if ni is not None:
             no_improve = int(ni)
         print(
-            f"Продолжение с {resume_path}: completed_epoch={done} → старт с эпохи {start_ep}, "
+            f"Продолжение с {resume_path}: completed_epoch={done} -> старт с эпохи {start_ep}, "
             f"best_macro_f1={best_f1} best_epoch={best_ep} no_improve={no_improve}",
             flush=True,
         )
@@ -569,7 +569,7 @@ def main() -> None:
             model, val_loader, crit, device, num_classes, use_amp=use_amp, show_progress=show_progress, epoch=ep
         )
         if not math.isfinite(macro):
-            print("macro_f1 не число — подставляем 0.0 (иначе чекпоинт не сохранится)", flush=True)
+            print("macro_f1 не число - подставляем 0.0 (иначе чекпоинт не сохранится)", flush=True)
             macro = 0.0
         per = add_label_names(per, excluded)
 
@@ -610,7 +610,7 @@ def main() -> None:
                     no_improve=no_improve,
                 )
                 _atomic_torch_save(payload, best_path)
-                print(f"checkpoint best → {best_path} macro_f1={macro:.4f}", flush=True)
+                print(f"checkpoint best -> {best_path} macro_f1={macro:.4f}", flush=True)
         else:
             no_improve += 1
 
@@ -680,8 +680,8 @@ def main() -> None:
         "stop_reason": stop,
     }
     mp, ep = save_metrics_report(metrics, met_dir, model_name)
-    print(f"metrics → {mp}", flush=True)
-    print(f"experiments → {ep}", flush=True)
+    print(f"metrics -> {mp}", flush=True)
+    print(f"experiments -> {ep}", flush=True)
     if save_ckpt:
         print(f"best.pt exists={best_path.is_file()} last.pt exists={last_path.is_file()}", flush=True)
 

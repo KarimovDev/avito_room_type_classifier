@@ -120,11 +120,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
     return epoch_loss, epoch_acc
 
-# валидация
-# - val_loss
-# - val_acc
-# - val_f1_macro
-# - сохраняем все y_true и y_pred для отчёта
+# Считаем метрики на validation
 @torch.inference_mode()
 def validate(model, loader, criterion, device):
     model.eval()
@@ -274,18 +270,17 @@ def main():
     for i, cls_name in enumerate(classes):
         print(f'  {i}: {cls_name}')
 
-    # Количество классов определяется автоматически
+    # Количество классов берем из train CSV
     model = build_model(num_classes=len(classes))
     model = model.to(device)
 
-    # Если классы сильно несбалансированы, можно добавить class weights.
+    # Class weights тут пока не используем
     criterion = nn.CrossEntropyLoss()
 
-    # Adam — хороший старт.
-    # Потом можно попробовать AdamW.
+    # Adam оставлен как простой старт
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 
-    # Уменьшает learning rate, если val_loss не улучшается.
+    # Уменьшаем learning rate, если val_loss не улучшается
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
         mode='min',
