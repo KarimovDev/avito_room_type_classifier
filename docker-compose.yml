@@ -21,7 +21,10 @@ services:
       service: base
     command: >
       python -m models.densenet121.train_densenet121
-      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+      --epochs-stage1 ${STAGE1:-2}
+      --epochs-stage2 ${STAGE2:-8}
+      --epochs-stage3 ${STAGE3:-5}
+      --batch-size ${BATCH:-32}
 
   train-resnet18:
     extends:
@@ -33,8 +36,9 @@ services:
   train-resnet50:
     extends:
       service: base
-    # resnet50.py пока без argparse — EPOCHS и BATCH игнорируются
-    command: python models/resnet50/resnet50.py
+    command: >
+      python -m models.resnet50.resnet50
+      --epochs ${EPOCHS:-15} --batch-size ${BATCH:-32}
 
   train-efficientnet:
     extends:
@@ -49,6 +53,13 @@ services:
     command: >
       python -m models.convnext_nano.train_convnext
       --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-convnext-tiny:
+    extends:
+      service: base
+    command: >
+      python -m models.convnext_tiny.train_convnext_tiny
+      --config ${CONFIG:-models/convnext_tiny/train_config.json}
 
   gradcam:
     extends:

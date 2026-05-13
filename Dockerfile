@@ -16,16 +16,20 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /app
 
-# Копируем файлы зависимостей первыми для кэширования слоев
+# Копируем зависимости первыми для кэша Docker
 COPY pyproject.toml uv.lock ./
 
-# data покрывает torch/torchvision/numpy/pandas/pillow/sklearn общие для всех моделей
-# interpretability добавляет grad-cam, matplotlib, opencv (только уникальные зависимости)
-# yolo исключен, так как тяжелый, монтируется отдельно при необходимости
+# Ставим группы, которые нужны docker-compose сервисам
 RUN uv sync \
     --group data \
+    --group densenet121 \
+    --group efficientnet \
+    --group resnet18 \
+    --group resnet50 \
     --group interpretability \
     --group convnext_nano \
+    --group convnext_tiny \
+    --group yolo \
     --no-install-project \
     --frozen
 

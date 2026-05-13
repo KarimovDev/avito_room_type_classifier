@@ -170,8 +170,8 @@ docker-check-gpu:
     docker compose run --rm base python -c "exec('import torch\nprint(\"torch:\", torch.__version__)\nprint(\"CUDA:\", torch.cuda.is_available())\nprint(\"Device:\", torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"CPU\")')"
 
 # Обучить DenseNet121 в Docker
-docker-train-densenet121 EPOCHS="30" BATCH="32":
-    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-densenet121
+docker-train-densenet121 STAGE1="2" STAGE2="8" STAGE3="5" BATCH="32":
+    docker compose run --rm -e STAGE1={{STAGE1}} -e STAGE2={{STAGE2}} -e STAGE3={{STAGE3}} -e BATCH={{BATCH}} train-densenet121
 
 # Обучить ResNet18 в Docker
 docker-train-resnet18 EPOCHS="30" BATCH="32":
@@ -188,6 +188,10 @@ docker-train-efficientnet EPOCHS="30" BATCH="32":
 # Обучить ConvNeXt Nano в Docker
 docker-train-convnext EPOCHS="30" BATCH="32":
     docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-convnext
+
+# Обучить ConvNeXt Tiny в Docker
+docker-train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
+    docker compose run --rm -e CONFIG={{CONFIG}} train-convnext-tiny
 
 # Запустить YOLO в Docker
 docker-run-yolo:
