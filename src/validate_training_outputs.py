@@ -10,7 +10,8 @@ import torch
 from src.training_helpers import PROJECT_ROOT, resolve_project_path
 
 
-METRIC_KEYS = {"best_macro_f1", "checkpoint"}
+CLASSIFIER_METRIC_KEYS = {"best_macro_f1", "checkpoint"}
+COMMON_METRIC_KEYS = {"best_metric", "metric_name", "checkpoint"}
 CHECKPOINT_KEYS = {
     "model_name",
     "model_state_dict",
@@ -71,8 +72,13 @@ def validate_metrics(path: Path, errors: list[str]) -> None:
     find_path_errors(data, path, errors)
 
     if path.name.endswith("_metrics.json") and isinstance(data, dict):
-        # Финальные metrics-файлы должны хранить главную метрику и путь к модели
-        missing = sorted(METRIC_KEYS - data.keys())
+        # Новые metrics-файлы могут хранить любую главную метрику
+        if "metric_name" in data:
+            expected_keys = COMMON_METRIC_KEYS
+        else:
+            expected_keys = CLASSIFIER_METRIC_KEYS
+
+        missing = sorted(expected_keys - data.keys())
         if missing:
             errors.append(f"{path.relative_to(PROJECT_ROOT)}: missing keys {missing}")
 

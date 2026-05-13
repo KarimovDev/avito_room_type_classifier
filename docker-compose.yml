@@ -69,4 +69,4 @@ services:
   yolo:
     extends:
       service: base
-    command: python models/yolo/main_yolo.py
+    command: python -m models.yolo.main_yolo
