@@ -1,6 +1,6 @@
 set dotenv-load := true
 
-set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
+set windows-shell := ["bash.exe", "-uc"]
 
 PYTHON_VERSION := "3.12.8"
 PYTORCH_PIP := "uv pip"
