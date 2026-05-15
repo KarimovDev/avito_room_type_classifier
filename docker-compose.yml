@@ -12,13 +12,6 @@ services:
       MLFLOW_TRACKING_USERNAME: ${MLFLOW_TRACKING_USERNAME:-}
       MLFLOW_TRACKING_PASSWORD: ${MLFLOW_TRACKING_PASSWORD:-}
     shm_size: "2g"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   train-densenet121:
     extends:
@@ -35,7 +28,10 @@ services:
       service: base
     command: >
       python -m models.resnet18.train_resnet18
-      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+      --epochs ${EPOCHS:-30}
+      --batch-size ${BATCH:-32}
+      --seed ${SEED:-42}
+      --no-weighted-sampling
 
   train-resnet50:
     extends:

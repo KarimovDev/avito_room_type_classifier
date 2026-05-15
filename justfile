@@ -214,12 +214,12 @@ docker-check-gpu:
 docker-train-densenet121 STAGE1="2" STAGE2="8" STAGE3="5" BATCH="32":
     docker compose run --rm -e STAGE1={{STAGE1}} -e STAGE2={{STAGE2}} -e STAGE3={{STAGE3}} -e BATCH={{BATCH}} train-densenet121
 
-# Обучить ResNet18 в Docker
-docker-train-resnet18 EPOCHS="30" BATCH="32":
-    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-resnet18
+# Обучить ResNet18 в Docker с лучшими параметрами
+docker-train-resnet18 EPOCHS="30" BATCH="32" SEED="42":
+    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} -e SEED={{SEED}} train-resnet18
 
 # Обучить ResNet50 в Docker
-docker-train-resnet50 EPOCHS="30" BATCH="32":
+docker-train-resnet50 EPOCHS="15" BATCH="32":
     docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-resnet50
 
 # Обучить EfficientNet в Docker
@@ -238,6 +238,10 @@ docker-train-efficientnet-b1 EPOCHS="30" BATCH="32":
 docker-train-convnext EPOCHS="30" BATCH="32":
     docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-convnext
 
+# Обучить ConvNeXt Nano в Docker
+docker-train-convnext-nano EPOCHS="30" BATCH="32":
+    just docker-train-convnext {{EPOCHS}} {{BATCH}}
+
 # Обучить ConvNeXt Tiny в Docker
 docker-train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
     docker compose run --rm -e CONFIG={{CONFIG}} train-convnext-tiny
@@ -245,6 +249,10 @@ docker-train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
 # Запустить YOLO в Docker
 docker-run-yolo:
     docker compose run --rm yolo
+
+# Запустить YOLO в Docker и залогировать inference-run
+docker-train-yolo:
+    just docker-run-yolo
 
 # Построить Grad-CAM в Docker
 docker-gradcam:
