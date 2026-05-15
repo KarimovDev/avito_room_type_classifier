@@ -27,6 +27,7 @@ FIELDNAMES = [
     "best_metric",
     "best_macro_f1",
     "best_accuracy",
+    "best_train_loss",
     "best_val_loss",
     "best_epoch",
     "checkpoint",
@@ -73,6 +74,14 @@ def _format_metric(value: float | None) -> str:
     return f"{value:.6f}"
 
 
+def _format_epoch(value: float | None) -> str:
+    if value is None:
+        return ""
+    if value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
 def _metric(run: Any, *names: str) -> float | None:
     for name in names:
         value = _as_float(run.data.metrics.get(name))
@@ -103,8 +112,9 @@ def _row_from_run(run: Any) -> dict[str, str]:
         "best_metric": _format_metric(_metric(run, "best_metric", "best_macro_f1", "macro_f1")),
         "best_macro_f1": _format_metric(_metric(run, "best_macro_f1", "macro_f1")),
         "best_accuracy": _format_metric(_metric(run, "best_accuracy", "accuracy")),
+        "best_train_loss": _format_metric(_metric(run, "best_train_loss")),
         "best_val_loss": _format_metric(_metric(run, "best_val_loss", "val_loss")),
-        "best_epoch": _param(run, "best_epoch"),
+        "best_epoch": _format_epoch(_metric(run, "best_epoch")) or _param(run, "best_epoch"),
         "checkpoint": _param(run, "checkpoint"),
         "mlflow_run_id": run.info.run_id,
     }

@@ -227,12 +227,14 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
         "run_id": run_id,
         "model": metrics["model"],
         "best_epoch": metrics["best_epoch"],
+        "best_stage_epoch": best_epoch_metrics.get("stage_epoch"),
         "best_macro_f1": metrics["best_macro_f1"],
         "best_accuracy": best_epoch_metrics.get("accuracy"),
         "best_train_loss": best_epoch_metrics.get("train_loss"),
         "best_val_loss": best_epoch_metrics.get("val_loss"),
         "stop_reason": metrics["stop_reason"],
         "checkpoint": metrics["checkpoint"],
+        "epochs": hyperparameters["epochs"],
         "epochs_stage1": hyperparameters["epochs_stage1"],
         "epochs_stage2": hyperparameters["epochs_stage2"],
         "epochs_stage3": hyperparameters["epochs_stage3"],
@@ -275,13 +277,13 @@ def _run_stage(
     checkpoint_path: Path,
     save_checkpoint: bool,
     best_macro_f1: float,
-    best_epoch: int | str,
+    best_epoch: int,
     best_epoch_metrics: dict[str, object],
     early_stopping_patience: int,
     early_stopping_min_delta: float,
     idx_to_class: dict[str, str],
     epoch_offset: int = 0,
-) -> tuple[float, int | str, dict[str, object], str, list[dict]]:
+) -> tuple[float, int, dict[str, object], str, list[dict]]:
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
     history: list[dict] = []
@@ -313,10 +315,12 @@ def _run_stage(
         improved = macro_f1 > best_macro_f1 + early_stopping_min_delta
         if improved:
             best_macro_f1 = macro_f1
-            best_epoch = f"s{stage_name}_{local_epoch}"
+            best_epoch = global_epoch
+            best_stage_epoch = f"s{stage_name}_{local_epoch}"
             epochs_without_improvement = 0
             best_epoch_metrics = {
                 "epoch": best_epoch,
+                "stage_epoch": best_stage_epoch,
                 "train_loss": train_loss,
                 "val_loss": val_loss,
                 "accuracy": accuracy,
@@ -359,7 +363,7 @@ def _run_stage(
                         checkpoint_path=checkpoint_path,
                         extra={
                             "num_classes": num_classes,
-                            "stage_epoch": best_epoch,
+                            "stage_epoch": best_stage_epoch,
                             "idx_to_class": idx_to_class,
                         },
                     ),
@@ -404,6 +408,7 @@ def main() -> None:
     args = parse_args()
     if args.epochs_stage1 < 1 or args.epochs_stage2 < 1 or args.epochs_stage3 < 1:
         raise ValueError("Все --epochs-stage* должны быть >= 1")
+    total_epochs = args.epochs_stage1 + args.epochs_stage2 + args.epochs_stage3
 
     validate_paths(args)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -442,6 +447,7 @@ def main() -> None:
         f"densenet121_{run_id}",
         {
             "model": "densenet121",
+            "epochs": total_epochs,
             "epochs_stage1": args.epochs_stage1,
             "epochs_stage2": args.epochs_stage2,
             "epochs_stage3": args.epochs_stage3,
@@ -466,7 +472,7 @@ def main() -> None:
     finetune_checkpoint = args.output_dir / "densenet121_best.pt"
 
     best_macro_f1 = -1.0
-    best_epoch: int | str = 0
+    best_epoch = 0
     best_epoch_metrics: dict[str, object] = {}
     full_history: list[dict] = []
     idx_to_class = {str(class_id): label for class_id, label in load_label_mapping().items()}
@@ -581,6 +587,7 @@ def main() -> None:
         "run_id": run_id,
         "model": "densenet121",
         "hyperparameters": {
+            "epochs": total_epochs,
             "epochs_stage1": args.epochs_stage1,
             "epochs_stage2": args.epochs_stage2,
             "epochs_stage3": args.epochs_stage3,
@@ -623,6 +630,7 @@ def main() -> None:
     log_mlflow_params(
         {
             "best_epoch": best_epoch,
+            "best_stage_epoch": best_epoch_metrics.get("stage_epoch"),
             "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(finetune_checkpoint),
             "metrics_json": to_project_relative_path(metrics_path),
         }
