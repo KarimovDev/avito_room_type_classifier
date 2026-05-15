@@ -761,8 +761,7 @@ def render_results(uploaded_files: list[st.runtime.uploaded_file_manager.Uploade
                 st.image(
                     uploaded_file.getvalue(), 
                     caption=uploaded_file.name, 
-                    width=PREVIEW_WIDTH_PX,
-                    #use_container_width=True
+                    width=PREVIEW_WIDTH_PX
                 )
 
 
