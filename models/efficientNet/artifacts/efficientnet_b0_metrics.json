@@ -120,7 +120,7 @@
       "label": "комната без мебели"
     }
   ],
-  "checkpoint": "/Users/karimovdmitry/projects/mephi/room_type_classifier/models/efficientNet/artifacts/efficientnet_b0_best.pt",
+  "checkpoint": "models/efficientNet/artifacts/efficientnet_b0_best.pt",
   "history": [
     {
       "epoch": 1,

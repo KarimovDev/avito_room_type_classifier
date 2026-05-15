@@ -63,7 +63,7 @@ def get_sample_from_split(split: str, sample_index: int) -> tuple[Path, int | No
     """Берём пример из train/val по индексу.
 
     В CSV берём `image_id_ext` и строим путь: `{split}_images/{image_id_ext}.jpg`.
-    Если файла нет на диске — выкидываем строку из выборки.
+    Если файла нет на диске - выкидываем строку из выборки
     """
     csv_path = ROOT_DIR / "data" / "raw" / f"{split}_df.csv"
     image_root = ROOT_DIR / "data" / "raw" / f"{split}_images"

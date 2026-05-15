@@ -27,7 +27,9 @@ from models.convnext_tiny.model import build_convnext_tiny
 from src.dataloaders import create_dataloaders
 from src.device import get_default_device
 from src.labels import load_label_mapping
+from src.mlflow_utils import end_mlflow_run, log_mlflow_artifacts, log_mlflow_metrics, log_mlflow_params, start_mlflow_run
 from src.metrics import calculate_accuracy, calculate_macro_f1, calculate_per_class_f1
+from src.training_helpers import build_checkpoint, to_project_relative_path
 
 _CONFIG_DIR = Path(__file__).resolve().parent
 _DEFAULT_CONFIG = _CONFIG_DIR / "train_config.json"
@@ -65,7 +67,7 @@ def _resolve_csv(csv_path: Path, default_file: str) -> Path:
         p = csv_path
     if p.exists() and p.is_dir():
         out = p / default_file
-        print(f"CSV: каталог {csv_path} → файл {out}", flush=True)
+        print(f"CSV: каталог {csv_path} -> файл {out}", flush=True)
         return out
     return csv_path
 
@@ -255,8 +257,14 @@ def _build_ckpt_payload(
     no_improve: int,
 ) -> dict[str, Any]:
     out: dict[str, Any] = {
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": opt.state_dict(),
+        **build_checkpoint(
+            model=model,
+            model_name=str(meta.get("model_name", "convnext_tiny")),
+            epoch=completed_epoch,
+            best_metric=best_f1 if math.isfinite(best_f1) else macro_f1,
+            optimizer=opt,
+            checkpoint_path=meta.get("checkpoint_path"),
+        ),
         "scaler_state_dict": scaler.state_dict() if scaler.is_enabled() else None,
         "completed_epoch": completed_epoch,
         "macro_f1": float(macro_f1),
@@ -282,7 +290,7 @@ def save_metrics_report(metrics: dict[str, Any], metrics_dir: Path, model_name: 
         "run_id": rid,
         "model": metrics["model"],
         "model_name": model_name,
-        "metrics_dir": str(metrics_dir.resolve()),
+        "metrics_dir": to_project_relative_path(metrics_dir),
         "best_epoch": metrics["best_epoch"],
         "best_macro_f1": metrics["best_macro_f1"],
         "best_accuracy": be.get("accuracy"),
@@ -361,7 +369,7 @@ def _log_torch_and_device(device: torch.device) -> None:
             "Поставьте CUDA-сборку в тот же venv, из корня room_type_classifier:\n"
             "  uv pip install torch==2.5.1 torchvision==0.20.1 "
             "--extra-index-url https://download.pytorch.org/whl/cu124\n"
-            "Другая версия CUDA у драйвера — см. https://pytorch.org/get-started/locally/ (например cu121: .../whl/cu121).",
+            "Другая версия CUDA у драйвера - см. https://pytorch.org/get-started/locally/ (например cu121: .../whl/cu121)",
             flush=True,
         )
 
@@ -404,7 +412,7 @@ def main() -> None:
             raise ValueError(f"После исключения класса {excluded} train={nt}, val={nv}")
         inferred = int(pd.read_csv(train_eff)["result"].max()) + 1
         if num_classes != inferred:
-            print(f"num_classes {num_classes} → {inferred} (по train после exclude)", flush=True)
+            print(f"num_classes {num_classes} -> {inferred} (по train после exclude)", flush=True)
             num_classes = inferred
         print(f"Исключён класс {excluded}: train {nt} (−{dt}), val {nv} (−{dv})", flush=True)
 
@@ -475,7 +483,7 @@ def main() -> None:
         if "image_path" in pd.read_csv(train_eff, nrows=1).columns:
             print(
                 "Данные: CSV после preprocess_data (есть image_path). "
-                "train_images/val_images в JSON — каталоги с jpg (обычно data/raw/..._images).",
+                "train_images/val_images в JSON - каталоги с jpg (обычно data/raw/..._images)",
                 flush=True,
             )
     except Exception:
@@ -505,7 +513,9 @@ def main() -> None:
         "num_classes": num_classes,
         "image_size": image_size,
         "excluded_original_class_id": excluded,
-        "config_path": str(args.config.resolve()),
+        "config_path": to_project_relative_path(args.config),
+        "model_name": model_name,
+        "idx_to_class": {str(class_id): label for class_id, label in load_label_mapping().items()},
     }
 
     start_ep = 1
@@ -515,7 +525,7 @@ def main() -> None:
         ck = _load_ckpt(resume_path)
         if int(ck.get("num_classes", num_classes)) != num_classes:
             raise ValueError(
-                f"num_classes в чекпоинте ({ck.get('num_classes')}) ≠ текущему ({num_classes})"
+                f"num_classes в чекпоинте ({ck.get('num_classes')}) != текущему ({num_classes})"
             )
         model.load_state_dict(ck["model_state_dict"], strict=True)
         if ck.get("optimizer_state_dict"):
@@ -543,7 +553,7 @@ def main() -> None:
         if ni is not None:
             no_improve = int(ni)
         print(
-            f"Продолжение с {resume_path}: completed_epoch={done} → старт с эпохи {start_ep}, "
+            f"Продолжение с {resume_path}: completed_epoch={done} -> старт с эпохи {start_ep}, "
             f"best_macro_f1={best_f1} best_epoch={best_ep} no_improve={no_improve}",
             flush=True,
         )
@@ -551,6 +561,29 @@ def main() -> None:
     if start_ep > epochs:
         print(f"Нечего делать: start_ep={start_ep} > epochs={epochs} (увеличь epochs в JSON)", flush=True)
         return
+
+    # В MLflow сохраняем параметры запуска и метрики эпох
+    start_mlflow_run(
+        model_name,
+        f"{model_name}_{run_id}",
+        {
+            "model": model_name,
+            "config": to_project_relative_path(args.config),
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "image_size": image_size,
+            "learning_rate": lr,
+            "weight_decay": wd,
+            "seed": seed,
+            "pretrained": pretrained,
+            "class_weights": use_class_w,
+            "weighted_sampling": use_wsample,
+            "early_stopping_patience": es_pat,
+            "early_stopping_min_delta": es_delta,
+            "amp": use_amp,
+            "exclude_class_id": excluded,
+        },
+    )
 
     for ep in range(start_ep, epochs + 1):
         t0 = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -560,7 +593,7 @@ def main() -> None:
             model, val_loader, crit, device, num_classes, use_amp=use_amp, show_progress=show_progress, epoch=ep
         )
         if not math.isfinite(macro):
-            print("macro_f1 не число — подставляем 0.0 (иначе чекпоинт не сохранится)", flush=True)
+            print("macro_f1 не число - подставляем 0.0 (иначе чекпоинт не сохранится)", flush=True)
             macro = 0.0
         per = add_label_names(per, excluded)
 
@@ -592,7 +625,7 @@ def main() -> None:
                     model,
                     opt,
                     scaler,
-                    meta=ckpt_meta,
+                    meta={**ckpt_meta, "checkpoint_path": best_path},
                     completed_epoch=ep,
                     macro_f1=macro,
                     run_id=run_id,
@@ -601,7 +634,7 @@ def main() -> None:
                     no_improve=no_improve,
                 )
                 _atomic_torch_save(payload, best_path)
-                print(f"checkpoint best → {best_path} macro_f1={macro:.4f}", flush=True)
+                print(f"checkpoint best -> {best_path} macro_f1={macro:.4f}", flush=True)
         else:
             no_improve += 1
 
@@ -611,7 +644,7 @@ def main() -> None:
                     model,
                     opt,
                     scaler,
-                    meta=ckpt_meta,
+                    meta={**ckpt_meta, "checkpoint_path": last_path},
                     completed_epoch=ep,
                     macro_f1=macro,
                     run_id=run_id,
@@ -627,6 +660,16 @@ def main() -> None:
             f"best={best_f1:.4f} best_ep={best_ep} no_improve={no_improve}",
             flush=True,
         )
+        log_mlflow_metrics(
+            {
+                "train_loss": tl,
+                "val_loss": vl,
+                "accuracy": acc,
+                "macro_f1": macro,
+                "best_macro_f1": best_f1,
+            },
+            step=ep,
+        )
         append_history(met_dir, model_name, run_id, ep, tl, vl, acc, macro, best_f1, best_ep)
 
         if es_pat > 0 and no_improve >= es_pat:
@@ -636,8 +679,8 @@ def main() -> None:
 
     hp = {
         "model_name": model_name,
-        "config": str(args.config.resolve()),
-        "metrics_dir": str(met_dir),
+        "config": to_project_relative_path(args.config),
+        "metrics_dir": to_project_relative_path(met_dir),
         "epochs": epochs,
         "batch_size": batch_size,
         "image_size": image_size,
@@ -656,7 +699,7 @@ def main() -> None:
         "pin_memory": pin_b,
         "persistent_workers": pers_b,
         "exclude_class_id": excluded,
-        "resume_from": str(resume_path.resolve()) if resume_path else None,
+        "resume_from": to_project_relative_path(resume_path),
         "require_cuda": _bool(cfg.get("require_cuda"), False),
     }
     metrics = {
@@ -666,13 +709,38 @@ def main() -> None:
         "best_epoch": best_ep,
         "best_macro_f1": float(best_f1) if math.isfinite(best_f1) else None,
         "best_epoch_metrics": best_metrics,
-        "checkpoint": None if not save_ckpt else str(best_path),
-        "last_checkpoint": None if not save_ckpt or not save_last else str(last_path),
+        "checkpoint": None if not save_ckpt else to_project_relative_path(best_path),
+        "last_checkpoint": None if not save_ckpt or not save_last else to_project_relative_path(last_path),
         "stop_reason": stop,
     }
     mp, ep = save_metrics_report(metrics, met_dir, model_name)
-    print(f"metrics → {mp}", flush=True)
-    print(f"experiments → {ep}", flush=True)
+    log_mlflow_metrics(
+        {
+            "best_macro_f1": float(best_f1) if math.isfinite(best_f1) else None,
+            "best_epoch": best_ep,
+            "best_accuracy": best_metrics.get("accuracy"),
+            "best_val_loss": best_metrics.get("val_loss"),
+        }
+    )
+    log_mlflow_params(
+        {
+            "best_epoch": best_ep,
+            "checkpoint": None if not save_ckpt else to_project_relative_path(best_path),
+            "metrics_json": to_project_relative_path(mp),
+        }
+    )
+    log_mlflow_artifacts(
+        [
+            mp,
+            ep,
+            met_dir / f"{model_name}_epoch_history.jsonl",
+            None if not save_ckpt else best_path,
+            None if not save_ckpt or not save_last else last_path,
+        ]
+    )
+    end_mlflow_run()
+    print(f"metrics -> {mp}", flush=True)
+    print(f"experiments -> {ep}", flush=True)
     if save_ckpt:
         print(f"best.pt exists={best_path.is_file()} last.pt exists={last_path.is_file()}", flush=True)
 

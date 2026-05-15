@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import random
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -22,15 +21,13 @@ from models.resnet18.resnet18 import build_resnet18
 from src.dataloaders import create_dataloaders
 from src.device import get_default_device
 from src.labels import load_label_mapping
+from src.mlflow_utils import end_mlflow_run, log_mlflow_artifacts, log_mlflow_metrics, log_mlflow_params, start_mlflow_run
 from src.metrics import calculate_accuracy, calculate_macro_f1, calculate_per_class_f1
+from src.training_helpers import build_checkpoint, set_seed, to_project_relative_path
 
 
 def parse_args() -> argparse.Namespace:
-    """Читает параметры запуска обучения из командной строки
-
-    Returns:
-        Namespace с путями, гиперпараметрами и настройками модели
-    """
+    """Читает параметры запуска из командной строки"""
     parser = argparse.ArgumentParser(description="Train ResNet18 on room type dataset")
     parser.add_argument("--num-classes", type=int, default=19)
     parser.add_argument("--epochs", type=int, default=30)
@@ -39,55 +36,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--learning-rate", type=float, default=1e-4)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
-    parser.add_argument("--seed", type=int, default=42, help="Seed для воспроизводимого обучения.")
+    parser.add_argument("--seed", type=int, default=42, help="Seed для воспроизводимого обучения")
     parser.add_argument("--train-csv", type=Path, default=ROOT_DIR / "data" / "processed" / "train_df.csv")
     parser.add_argument("--val-csv", type=Path, default=ROOT_DIR / "data" / "processed" / "val_df.csv")
     parser.add_argument("--train-images", type=Path, default=ROOT_DIR / "data" / "raw" / "train_images")
     parser.add_argument("--val-images", type=Path, default=ROOT_DIR / "data" / "raw" / "val_images")
     parser.add_argument("--output-dir", type=Path, default=ROOT_DIR / "outputs" / "models" / "resnet18")
     parser.add_argument("--metrics-dir", type=Path, default=ROOT_DIR / "reports" / "metrics" / "resnet18")
-    parser.add_argument("--no-pretrained", action="store_true", help="Не использовать веса ImageNet.")
-    parser.add_argument("--no-class-weights", action="store_true", help="Отключить веса классов в loss.")
+    parser.add_argument("--no-pretrained", action="store_true", help="Не использовать веса ImageNet")
+    parser.add_argument("--no-class-weights", action="store_true", help="Отключить веса классов в loss")
     parser.add_argument(
         "--no-weighted-sampling",
         action="store_true",
-        help="Отключить WeightedRandomSampler для train DataLoader.",
+        help="Отключить WeightedRandomSampler для train DataLoader",
     )
     parser.add_argument(
         "--no-save-checkpoint",
         action="store_true",
-        help="Не сохранять веса модели, оставить только JSON с F1-метриками.",
+        help="Не сохранять веса модели, оставить только JSON с F1-метриками",
     )
     parser.add_argument(
         "--early-stopping-patience",
         type=int,
         default=3,
-        help="Сколько эпох ждать улучшения macro-F1 перед остановкой. 0 = не останавливать.",
+        help="Сколько эпох ждать улучшения macro-F1 перед остановкой, 0 = не останавливать",
     )
     parser.add_argument(
         "--early-stopping-min-delta",
         type=float,
         default=1e-4,
-        help="Минимальный прирост macro-F1, который считается улучшением.",
+        help="Минимальный прирост macro-F1, который считается улучшением",
     )
     return parser.parse_args()
 
 
-def set_seed(seed: int) -> None:
-    """Фиксирует основные источники случайности для повторяемых экспериментов."""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-
-
 def validate_paths(args: argparse.Namespace) -> None:
-    """Проверяет, что входные CSV и папки с изображениями существуют
-
-    Args:
-        args: Параметры запуска из parse_args()
-    """
+    """Проверяет входные CSV и папки с изображениями"""
     paths = {
         "--train-csv": args.train_csv,
         "--val-csv": args.val_csv,
@@ -100,20 +84,11 @@ def validate_paths(args: argparse.Namespace) -> None:
 
 
 def get_class_weights(csv_path: Path, num_classes: int, device: torch.device) -> torch.Tensor:
-    """Считает веса классов для CrossEntropyLoss
-
-    Args:
-        csv_path: Путь к processed train CSV
-        num_classes: Количество классов
-        device: Устройство, на котором будет считаться loss
-
-    Returns:
-        Tensor весов классов на выбранном устройстве
-    """
+    """Считает веса классов для CrossEntropyLoss"""
     targets = pd.read_csv(csv_path)["result"].astype(int)
     counts = torch.bincount(torch.tensor(targets.to_list()), minlength=num_classes).float()
 
-    # Редкие классы получают больший вес, а отсутствующие классы не участвуют в loss
+    # Редкие классы получают больший вес
     weights = torch.zeros(num_classes, dtype=torch.float32)
     existing_classes = counts > 0
     weights[existing_classes] = counts.sum() / (existing_classes.sum() * counts[existing_classes])
@@ -127,23 +102,12 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     device: torch.device,
 ) -> float:
-    """Обучает модель одну эпоху
-
-    Args:
-        model: ResNet18
-        loader: Train DataLoader
-        criterion: Функция потерь
-        optimizer: Оптимизатор
-        device: CPU/CUDA/MPS
-
-    Returns:
-        Средний train loss за эпоху
-    """
+    """Обучает модель одну эпоху"""
     model.train()
     total_loss = 0.0
 
     for images, targets in loader:
-        # Переносим данные на тот же device, где находится модель
+        # Переносим данные на тот же device, где модель
         images = images.to(device)
         targets = targets.to(device)
 
@@ -166,18 +130,7 @@ def validate(
     device: torch.device,
     num_classes: int,
 ) -> tuple[float, float, float, list[dict[str, object]]]:
-    """Проверяет модель на validation и считает F1-метрики
-
-    Args:
-        model: ResNet18
-        loader: Validation DataLoader
-        criterion: Функция потерь
-        device: CPU/CUDA/MPS
-        num_classes: Количество классов
-
-    Returns:
-        Средний validation loss, accuracy, macro-F1 и F1 по каждому классу
-    """
+    """Проверяет модель на validation"""
     model.eval()
     total_loss = 0.0
     per_class_loss_sum = torch.zeros(num_classes, dtype=torch.float64)
@@ -221,14 +174,7 @@ def validate(
 
 
 def add_label_names(per_class_f1: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Добавляет текстовые названия классов к per-class F1
-
-    Args:
-        per_class_f1: Список метрик по классам
-
-    Returns:
-        Такой же список, но с полем label
-    """
+    """Добавляет названия классов к per-class F1"""
     label_mapping = load_label_mapping()
     return [
         {
@@ -240,15 +186,7 @@ def add_label_names(per_class_f1: list[dict[str, object]]) -> list[dict[str, obj
 
 
 def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[Path, Path]:
-    """Сохраняет полный отчет последнего запуска и общий список экспериментов
-
-    Args:
-        metrics: Полный отчет по обучению
-        metrics_dir: Папка для метрик конкретной модели
-
-    Returns:
-        Пути к JSON последнего запуска и JSON со списком экспериментов
-    """
+    """Сохраняет JSON с метриками и список запусков"""
     metrics_dir.mkdir(parents=True, exist_ok=True)
     run_id = str(metrics.get("run_id") or datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
     metrics_with_run = {
@@ -283,7 +221,7 @@ def save_metrics_report(metrics: dict[str, object], metrics_dir: Path) -> tuple[
         "weighted_sampling": hyperparameters["weighted_sampling"],
         "early_stopping_patience": hyperparameters["early_stopping_patience"],
         "early_stopping_min_delta": hyperparameters["early_stopping_min_delta"],
-        "metrics_json": str(metrics_path),
+        "metrics_json": to_project_relative_path(metrics_path),
     }
 
     if experiments_path.exists():
@@ -307,11 +245,11 @@ def main() -> None:
     run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     set_seed(args.seed)
 
-    # Используем общий выбор устройства проекта: CUDA -> MPS -> CPU
+    # Выбираем устройство через общий helper
     device = get_default_device()
     print(f"Using device: {device}")
 
-    # DataLoader берется из общего data-pipeline, чтобы ResNet18 училась на processed CSV
+    # Берем общий DataLoader для processed CSV
     train_loader, val_loader = create_dataloaders(
         train_csv_path=args.train_csv,
         val_csv_path=args.val_csv,
@@ -341,10 +279,32 @@ def main() -> None:
         weight_decay=args.weight_decay,
     )
 
+    # В MLflow сохраняем параметры запуска и метрики эпох
+    start_mlflow_run(
+        "resnet18",
+        f"resnet18_{run_id}",
+        {
+            "model": "resnet18",
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+            "image_size": args.image_size,
+            "learning_rate": args.learning_rate,
+            "weight_decay": args.weight_decay,
+            "seed": args.seed,
+            "pretrained": not args.no_pretrained,
+            "class_weights": not args.no_class_weights,
+            "weighted_sampling": not args.no_weighted_sampling,
+            "early_stopping_patience": args.early_stopping_patience,
+            "early_stopping_min_delta": args.early_stopping_min_delta,
+        },
+    )
+
     best_macro_f1 = -1.0
     best_epoch = 0
     best_epoch_metrics: dict[str, object] = {}
     checkpoint_path = args.output_dir / "resnet18_best.pt"
+    checkpoint_json_path = to_project_relative_path(checkpoint_path)
+    idx_to_class = {str(class_id): label for class_id, label in load_label_mapping().items()}
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
 
@@ -361,7 +321,7 @@ def main() -> None:
 
         improved = macro_f1 > best_macro_f1 + args.early_stopping_min_delta
         if improved:
-            # Сохраняем только лучший чекпоинт, чтобы не плодить большие файлы
+            # Сохраняем только лучший чекпоинт
             best_macro_f1 = macro_f1
             best_epoch = epoch
             epochs_without_improvement = 0
@@ -378,7 +338,7 @@ def main() -> None:
                         "f1": item["f1"],
                         "accuracy": item["accuracy"],
                         "loss": item["loss"],
-                        # support - стандартное имя для числа validation-объектов этого класса
+                        # support - число validation-объектов этого класса
                         "support": item["support"],
                     }
                     for item in per_class_f1
@@ -386,13 +346,19 @@ def main() -> None:
             }
             if not args.no_save_checkpoint:
                 torch.save(
-                    {
-                        "model_state_dict": model.state_dict(),
-                        "num_classes": args.num_classes,
-                        "image_size": args.image_size,
-                        "epoch": best_epoch,
-                        "macro_f1": best_macro_f1,
-                    },
+                    build_checkpoint(
+                        model=model,
+                        model_name="resnet18",
+                        epoch=best_epoch,
+                        best_metric=best_macro_f1,
+                        optimizer=optimizer,
+                        checkpoint_path=checkpoint_path,
+                        extra={
+                            "num_classes": args.num_classes,
+                            "image_size": args.image_size,
+                            "idx_to_class": idx_to_class,
+                        },
+                    ),
                     checkpoint_path,
                 )
         else:
@@ -407,6 +373,16 @@ def main() -> None:
             f"best_macro_f1={best_macro_f1:.4f} "
             f"best_epoch={best_epoch} "
             f"no_improve={epochs_without_improvement}"
+        )
+        log_mlflow_metrics(
+            {
+                "train_loss": train_loss,
+                "val_loss": val_loss,
+                "accuracy": accuracy,
+                "macro_f1": macro_f1,
+                "best_macro_f1": best_macro_f1,
+            },
+            step=epoch,
         )
 
         if args.early_stopping_patience > 0 and epochs_without_improvement >= args.early_stopping_patience:
@@ -437,10 +413,33 @@ def main() -> None:
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
         "best_epoch_metrics": best_epoch_metrics,
-        "checkpoint": None if args.no_save_checkpoint else str(checkpoint_path),
+        "checkpoint": None if args.no_save_checkpoint else checkpoint_json_path,
         "stop_reason": stop_reason,
     }
     metrics_path, experiments_path = save_metrics_report(metrics, args.metrics_dir)
+    log_mlflow_metrics(
+        {
+            "best_macro_f1": best_macro_f1,
+            "best_epoch": best_epoch,
+            "best_accuracy": best_epoch_metrics.get("accuracy"),
+            "best_val_loss": best_epoch_metrics.get("val_loss"),
+        }
+    )
+    log_mlflow_params(
+        {
+            "best_epoch": best_epoch,
+            "checkpoint": None if args.no_save_checkpoint else checkpoint_json_path,
+            "metrics_json": to_project_relative_path(metrics_path),
+        }
+    )
+    log_mlflow_artifacts(
+        [
+            metrics_path,
+            experiments_path,
+            None if args.no_save_checkpoint else checkpoint_path,
+        ]
+    )
+    end_mlflow_run()
 
     print(f"best_macro_f1={best_macro_f1:.4f}")
     if args.no_save_checkpoint:

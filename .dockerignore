@@ -1,0 +1,80 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Кэш Python и виртуальные окружения
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+
+# Кэш uv
+.uv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Данные монтируются как volume при запуске контейнера
+data/
+*.csv
+*.parquet
+*.h5
+*.hdf5
+
+# Артефакты моделей и результаты монтируются как volume при запуске
+outputs/
+reports/
+*.pt
+*.pth
+*.onnx
+*.pkl
+*.joblib
+
+# Логи и метрики
+*.log
+logs/
+mlruns/
+wandb/
+runs/
+
+# JSON-артефакты (метрики, эксперименты), только из папок с результатами
+reports/**/*.json
+outputs/**/*.json
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Тесты
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Документация
+docs/
+*.md
+!README.md
+
+# Веса YOLO (тяжелые, скачиваются отдельно)
+yolov*.yaml
+
+# Streamlit
+.streamlit/
+
+# Docker (защита от рекурсивных сборок)
+Dockerfile*
+docker-compose*.yml
+.dockerignore

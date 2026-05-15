@@ -53,17 +53,28 @@ export PATH="$HOME/.local/bin:$PATH"
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### 3. Установка зависимостей (только через `uv`)
+### 3. Установка зависимостей через `just`
 
 Проект использует единый `pyproject.toml`. Зависимости разбиты на группы (могут пересекаться):
 
 - `data` — датасеты, dataloader, transforms, метрики, `torch`/`torchvision`
 - `efficientnet` — обучение EfficientNet baseline на общем pipeline
+- `resnet18` — обучение ResNet18
+- `resnet50` — обучение ResNet50
+- `densenet121` — обучение DenseNet121
+- `convnext_nano` — обучение ConvNeXt Nano
+- `convnext_tiny` — обучение ConvNeXt Tiny
 - `streamlit` — UI-сервис проекта
 - `yolo` — YOLO demo/inference зависимости
 
 ```bash
 just install
+```
+
+Для установки всех групп:
+
+```bash
+just install-all
 ```
 
 ### 3.1. PyTorch (`torch` / `torchvision`): опционально переустановить (CPU / CUDA / PyPI)
@@ -131,7 +142,7 @@ data/
   raw/           # сырые данные
   processed/     # обработанные данные
 
-notebooks/       # эксперименты и EDA
+notebooks/       # EDA и исследование данных
 
 models/          # эксперименты и код отдельных моделей
 
@@ -273,6 +284,99 @@ data/processed/class_mapping.json
 
 ```text
 data/processed/preprocessing_manifest.json
+```
+
+---
+
+## Обучение моделей
+
+Перед обучением подготовьте данные:
+
+```bash
+just prepare-data
+```
+
+Запуски моделей идут через `just`:
+
+```bash
+just train-resnet18
+just train-resnet50
+just train-densenet121
+just train-efficientnet
+just train-convnext-nano
+just train-convnext-tiny
+```
+
+MLflow логируется в DagsHub remote tracking. Перед первым обучением нужно
+установить зависимости и авторизоваться:
+
+```bash
+just install-tracking
+just dagshub-login
+```
+
+После этого запуски обучения автоматически попадают в DagsHub:
+
+```text
+https://dagshub.com/YashinSergey/room_type_classifier/experiments
+```
+
+Если нужно временно использовать локальный MLflow без DagsHub, можно запустить
+обучение с переменной:
+
+```bash
+RTC_MLFLOW_LOCAL=1 just train-resnet18
+```
+
+Таблица сравнения моделей строится из MLflow:
+
+```bash
+just compare-models
+```
+
+Результат сохраняется в:
+
+```text
+reports/model_comparison.csv
+```
+
+Главная метрика для выбора модели:
+
+```text
+best_macro_f1
+```
+
+Для YOLO обучение не запускается: используется внешний pretrained checkpoint. Для проверки inference:
+
+```bash
+just run-yolo
+```
+
+YOLO тоже попадает в MLflow, но у него другая метрика:
+
+```text
+avg_top1_confidence
+```
+
+Ее нельзя напрямую сравнивать с `best_macro_f1` обученных классификаторов,
+поэтому в итоговой таблице для YOLO нужно смотреть поля `metric_name` и
+`best_metric`.
+
+После обучения проверьте метрики и checkpoint-и:
+
+```bash
+just check-training-outputs
+```
+
+Все новые checkpoint-и должны сохранять относительные пути и общий набор полей:
+
+```text
+model_name
+model_state_dict
+epoch
+best_metric
+metric_name
+checkpoint_path
 ```
 
 ---

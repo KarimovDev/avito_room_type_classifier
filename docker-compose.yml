@@ -1,0 +1,72 @@
+services:
+
+  base:
+    build: .
+    image: room_type_classifier
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./reports:/app/reports
+    shm_size: "2g"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  train-densenet121:
+    extends:
+      service: base
+    command: >
+      python -m models.densenet121.train_densenet121
+      --epochs-stage1 ${STAGE1:-2}
+      --epochs-stage2 ${STAGE2:-8}
+      --epochs-stage3 ${STAGE3:-5}
+      --batch-size ${BATCH:-32}
+
+  train-resnet18:
+    extends:
+      service: base
+    command: >
+      python -m models.resnet18.train_resnet18
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-resnet50:
+    extends:
+      service: base
+    command: >
+      python -m models.resnet50.resnet50
+      --epochs ${EPOCHS:-15} --batch-size ${BATCH:-32}
+
+  train-efficientnet:
+    extends:
+      service: base
+    command: >
+      python -m models.efficientNet.train_efficientnet
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-convnext:
+    extends:
+      service: base
+    command: >
+      python -m models.convnext_nano.train_convnext
+      --epochs ${EPOCHS:-30} --batch-size ${BATCH:-32}
+
+  train-convnext-tiny:
+    extends:
+      service: base
+    command: >
+      python -m models.convnext_tiny.train_convnext_tiny
+      --config ${CONFIG:-models/convnext_tiny/train_config.json}
+
+  gradcam:
+    extends:
+      service: base
+    command: python models/efficientNet/grad_cam.py
+
+  yolo:
+    extends:
+      service: base
+    command: python -m models.yolo.main_yolo

@@ -16,6 +16,10 @@ data = [
   "torch==2.5.1",
   "torchvision==0.20.1",
 ]
+tracking = [
+  "dagshub==0.6.3",
+  "mlflow==3.7.0",
+]
 efficientnet = [
   "numpy==2.4.3",
   "pandas==2.3.3",
@@ -33,6 +37,7 @@ streamlit = [
   "pandas==2.3.3",
   "pillow==12.1.1",
   "streamlit==1.55.0",
+  "timm>=1.0.12",
 ]
 yolo = [
   "huggingface-hub==1.12.0",
@@ -40,6 +45,7 @@ yolo = [
   "pandas==2.3.3",
   "pillow==12.1.1",
   "protobuf==6.33.6",
+  "setuptools==80.9.0",
   "torch==2.5.1",
   "torchvision==0.20.1",
   "ultralytics==8.0.20",
@@ -53,7 +59,6 @@ resnet18 = [
   "torch==2.5.1",
   "torchvision==0.20.1",
 ]
-
 resnet50 = [
   "numpy==2.4.3",
   "pandas==2.3.3",
@@ -61,6 +66,35 @@ resnet50 = [
   "scikit-learn==1.5.2",
   "torch==2.5.1",
   "torchvision==0.20.1",
+]
+
+densenet121 = [
+  "numpy==2.4.3",
+  "pandas==2.3.3",
+  "pillow==12.1.1",
+  "scikit-learn==1.5.2",
+  "torch==2.5.1",
+  "torchvision==0.20.1",
+]
+
+convnext_nano = [
+  "numpy==2.4.3",
+  "pandas==2.3.3",
+  "pillow==12.1.1",
+  "scikit-learn==1.5.2",
+  "torch==2.5.1",
+  "torchvision==0.20.1",
+  "timm==1.0.12",
+]
+
+convnext_tiny = [
+  "numpy==2.4.3",
+  "pandas==2.3.3",
+  "pillow==12.1.1",
+  "scikit-learn==1.5.2",
+  "torch==2.5.1",
+  "torchvision==0.20.1",
+  "tqdm==4.67.3",
 ]
 
 [tool.uv]

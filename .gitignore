@@ -1,24 +1,30 @@
-# venv
+# virtualenv
 .venv/
 venv/
-__pycache__/
-*.pyc
 
-# python
+# python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # jupyter
 .ipynb_checkpoints/
 
 # data
-data
+data/
 
-# outputs
-outputs/models/
+# model outputs
+outputs/
+mlruns/
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+models/**/downloads/
+models/**/artifacts/
 
 # downloaded model weights
-downloads
+downloads/
 
 # env
 .env

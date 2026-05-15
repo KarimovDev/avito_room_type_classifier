@@ -1,6 +1,5 @@
 set dotenv-load := true
 
-# Keep Unix shell for macOS/Linux, use PowerShell only on Windows.
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 PYTHON_VERSION := "3.12.8"
@@ -14,66 +13,100 @@ default:
 setup:
     uv python install {{PYTHON_VERSION}}
 
-# Пересоздать виртуальное окружение проекта
+# Пересоздать локальное виртуальное окружение
 recreate-venv: setup
     uv venv --python {{PYTHON_VERSION}} --clear
 
-# Установить базовые зависимости для работы с data pipeline
+# Базовая установка проекта
 install: install-data
 
-# Установить зависимости для Dataset, DataLoader, transforms, metrics и preprocessing
+# Зависимости для preprocessing и общих даталоадеров
 install-data: setup
     uv sync --group data
 
-# Установить зависимости для Streamlit-приложения
-install-streamlit: setup
-    uv sync --only-group streamlit
+# Зависимости для MLflow и DagsHub
+install-tracking: setup
+    uv sync --group tracking
 
-# Установить зависимости для обучения EfficientNet
+# Авторизоваться в DagsHub для remote MLflow
+dagshub-login:
+    uv run --group tracking dagshub login
+
+# Показать страницу общих экспериментов DagsHub
+dagshub-experiments:
+    @echo "https://dagshub.com/YashinSergey/room_type_classifier/experiments"
+
+# Зависимости для Streamlit-приложения
+install-streamlit: setup
+    uv sync --group streamlit --group yolo --group efficientnet --group resnet18 --group resnet50 --group densenet121 --group convnext_nano --group convnext_tiny
+
+# Зависимости для обучения EfficientNet
 install-efficientnet: setup
     uv sync --group efficientnet
 
-# Установить зависимости для обучения ResNet18
+# Зависимости для обучения ResNet18
 install-resnet18: setup
     uv sync --group resnet18
 
-# Установить зависимости для EfficientNet и интерпретации результатов
+# Зависимости для обучения ResNet50
+install-resnet50: setup
+    uv sync --group resnet50
+
+# Зависимости для обучения DenseNet121
+install-densenet121: setup
+    uv sync --group densenet121
+
+# EfficientNet плюс библиотеки для Grad-CAM
 install-interpretability: setup
     uv sync --group efficientnet --group interpretability
 
-# Установить зависимости для YOLO
+# Зависимости для YOLO-скрипта
 install-yolo: setup
     uv sync --group yolo
 
-# Установить все группы зависимостей проекта
+# Зависимости для ConvNeXt Nano
+install-convnext-nano: setup
+    uv sync --group convnext_nano
+
+# Старое имя команды для ConvNeXt Nano
+install-convnext_nano: install-convnext-nano
+
+# Зависимости для ConvNeXt Tiny
+install-convnext-tiny: setup
+    uv sync --group convnext_tiny
+
+# Установить все группы зависимостей
 install-all: setup
     uv sync --all-groups
 
-# Запустить preprocessing: raw CSV -> processed CSV
+# Подготовить processed CSV из raw-данных
 prepare-data:
     uv run --group data python -m src.preprocess_data
 
-# Запустить preprocessing с рекомендуемыми heuristics: кабинет и гардеробная
+# Подготовить данные с рекомендованными эвристиками
 prepare-data-with-heuristics:
     uv run --group data python -m src.preprocess_data --include-heuristics recommended
 
-# Запустить preprocessing с выбранными heuristics
-# Пример: just prepare-data-heuristics cabinet,dressing_room
+# Подготовить данные с выбранными эвристиками
 prepare-data-heuristics HEURISTICS:
     uv run --group data python -m src.preprocess_data --include-heuristics {{HEURISTICS}}
 
-# Запустить preprocessing с выбранными heuristics и лимитом на каждый источник
-# Пример: just prepare-data-heuristics-limited cabinet,dressing_room 500
+# Подготовить данные с ограничением строк на эвристику
 prepare-data-heuristics-limited HEURISTICS MAX_ROWS:
     uv run --group data python -m src.preprocess_data --include-heuristics {{HEURISTICS}} --max-heuristics-per-source {{MAX_ROWS}}
 
-# Обновить lockfile при необходимости
+# Обновить uv.lock после правок pyproject.toml
 lock:
     uv lock
 
-#
-# - cpu: https://download.pytorch.org/whl/cpu
-# - cu130: https://download.pytorch.org/whl/cu130
+# Проверить формат метрик и чекпоинтов
+check-training-outputs:
+    uv run --group data python -m src.validate_training_outputs --allow-empty-checkpoints
+
+# Построить таблицу сравнения моделей из MLflow
+compare-models:
+    uv run --group tracking python -m src.compare_mlflow_models
+
 # Переустановить torch/torchvision из обычного PyPI
 pytorch-pypi:
     {{PYTORCH_PIP}} install --upgrade --reinstall torch torchvision
@@ -82,29 +115,70 @@ pytorch-pypi:
 pytorch-cpu:
     {{PYTORCH_PIP}} install --upgrade --reinstall --index-url "https://download.pytorch.org/whl/cpu" torch torchvision
 
-# Переустановить CUDA 13.0 версию torch/torchvision
+# Переустановить CUDA 13.0-версию torch/torchvision
 pytorch-cu130:
     {{PYTORCH_PIP}} install --upgrade --reinstall --index-url "https://download.pytorch.org/whl/cu130" torch torchvision
 
 # Запустить YOLO demo/inference
 run-yolo:
-    uv run --group yolo python models/yolo/main_yolo.py
+    uv run --group yolo --group tracking python -m models.yolo.main_yolo
 
-# Запустить обучение EfficientNet
-train-efficientnet:
-    uv run --group efficientnet python models/efficientNet/train_efficientnet.py
+# Локальное обучение
 
-# Запустить обучение ResNet50
-train-resnet50:
-    uv run --group resnet50 python models/resnet50/resnet50.py
+# Обучить EfficientNet B0
+train-efficientnet-b0 EPOCHS="30" BATCH="32":
+    uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
+      --variant b0 --epochs {{EPOCHS}} --batch-size {{BATCH}}
 
-# Запустить обучение ResNet18
+# Обучить EfficientNet B1
+train-efficientnet-b1 EPOCHS="30" BATCH="32":
+    uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
+      --variant b1 --epochs {{EPOCHS}} --batch-size {{BATCH}}
+
+# Старое короткое имя для EfficientNet B0
+train-efficientnet EPOCHS="30" BATCH="32":
+    just train-efficientnet-b0 {{EPOCHS}} {{BATCH}}
+
+# Обучить ResNet50
+train-resnet50 EPOCHS="15" BATCH="32":
+    uv run --group resnet50 --group tracking python -m models.resnet50.resnet50 \
+      --epochs {{EPOCHS}} --batch-size {{BATCH}}
+
+# Обучить ResNet18
 train-resnet18 EPOCHS="30":
-    uv run --group resnet18 python models/resnet18/train_resnet18.py --epochs {{EPOCHS}}
+    uv run --group resnet18 --group tracking python -m models.resnet18.train_resnet18 --epochs {{EPOCHS}}
 
-# Повторить лучший зафиксированный запуск ResNet18: class weights + без weighted sampler
+# Обучить ResNet18 без weighted sampler
 train-resnet18-best EPOCHS="30" SEED="42":
-    uv run --group resnet18 python models/resnet18/train_resnet18.py --epochs {{EPOCHS}} --seed {{SEED}} --no-weighted-sampling
+    uv run --group resnet18 --group tracking python -m models.resnet18.train_resnet18 --epochs {{EPOCHS}} --seed {{SEED}} --no-weighted-sampling
+
+# Обучить DenseNet121 по трем этапам
+train-densenet121 STAGE1="2" STAGE2="8" STAGE3="5" BATCH="32":
+    uv run --group densenet121 --group tracking python -m models.densenet121.train_densenet121 \
+      --epochs-stage1 {{STAGE1}} --epochs-stage2 {{STAGE2}} --epochs-stage3 {{STAGE3}} --batch-size {{BATCH}}
+
+# Обучить ConvNeXt Nano
+train-convnext-nano EPOCHS="30" BATCH="32":
+    uv run --group convnext_nano --group tracking python -m models.convnext_nano.train_convnext \
+      --epochs {{EPOCHS}} --batch-size {{BATCH}}
+
+# Старое короткое имя для обучения ConvNeXt Nano
+train-convnext EPOCHS="30" BATCH="32":
+    uv run --group convnext_nano --group tracking python -m models.convnext_nano.train_convnext \
+      --epochs {{EPOCHS}} --batch-size {{BATCH}}
+
+# Старое имя с подчеркиванием для ConvNeXt Nano
+train-convnext_nano EPOCHS="30" BATCH="32":
+    uv run --group convnext_nano --group tracking python -m models.convnext_nano.train_convnext \
+      --epochs {{EPOCHS}} --batch-size {{BATCH}}
+
+# Обучить ConvNeXt Tiny по JSON-конфигу
+train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
+    uv run --group convnext_tiny --group tracking python -m models.convnext_tiny.train_convnext_tiny --config {{CONFIG}}
+
+# Открыть локальный MLflow UI в fallback-режиме
+mlflow-ui:
+    uv run --group tracking mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 # Построить Grad-CAM для EfficientNet
 grad-cam-efficientnet:
@@ -112,9 +186,58 @@ grad-cam-efficientnet:
 
 # Запустить Streamlit-приложение
 run-streamlit:
-    uv run --group streamlit --group efficientnet --group yolo streamlit run streamlit/app.py
+    uv run --group streamlit --group yolo --group efficientnet --group resnet18 --group resnet50 --group densenet121 --group convnext_nano --group convnext_tiny streamlit run streamlit/app.py
 
-# Выполнить произвольную команду через uv
-# Пример: just run "python -V"
+# Запустить произвольную команду через uv
 run *ARGS:
     uv run {{ARGS}}
+
+# Docker
+
+# Собрать Docker-образы
+docker-build:
+    docker compose build
+
+# Собрать Docker-образ Streamlit
+docker-build-streamlit:
+    docker build -f streamlit/Dockerfile -t room-type-classifier-streamlit .
+
+# Запустить Streamlit в Docker
+docker-run-streamlit:
+    docker run --rm -p 8501:8501 room-type-classifier-streamlit
+
+# Проверить доступность GPU внутри Docker
+docker-check-gpu:
+    docker compose run --rm base python -c "exec('import torch\nprint(\"torch:\", torch.__version__)\nprint(\"CUDA:\", torch.cuda.is_available())\nprint(\"Device:\", torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"CPU\")')"
+
+# Обучить DenseNet121 в Docker
+docker-train-densenet121 STAGE1="2" STAGE2="8" STAGE3="5" BATCH="32":
+    docker compose run --rm -e STAGE1={{STAGE1}} -e STAGE2={{STAGE2}} -e STAGE3={{STAGE3}} -e BATCH={{BATCH}} train-densenet121
+
+# Обучить ResNet18 в Docker
+docker-train-resnet18 EPOCHS="30" BATCH="32":
+    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-resnet18
+
+# Обучить ResNet50 в Docker
+docker-train-resnet50 EPOCHS="30" BATCH="32":
+    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-resnet50
+
+# Обучить EfficientNet в Docker
+docker-train-efficientnet EPOCHS="30" BATCH="32":
+    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-efficientnet
+
+# Обучить ConvNeXt Nano в Docker
+docker-train-convnext EPOCHS="30" BATCH="32":
+    docker compose run --rm -e EPOCHS={{EPOCHS}} -e BATCH={{BATCH}} train-convnext
+
+# Обучить ConvNeXt Tiny в Docker
+docker-train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
+    docker compose run --rm -e CONFIG={{CONFIG}} train-convnext-tiny
+
+# Запустить YOLO в Docker
+docker-run-yolo:
+    docker compose run --rm yolo
+
+# Построить Grad-CAM в Docker
+docker-gradcam:
+    docker compose run --rm gradcam
