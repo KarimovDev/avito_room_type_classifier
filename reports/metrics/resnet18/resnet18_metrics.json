@@ -1,5 +1,5 @@
 {
-  "run_id": "2026-05-15_10-28-07",
+  "run_id": "2026-05-15_12-03-36",
   "model": "resnet18",
   "hyperparameters": {
     "epochs": 30,

@@ -34,13 +34,13 @@ YOLO_FILENAME = "best.pt"
 EFFICIENTNET_B0_CHECKPOINT_PATH = Path(
     os.getenv(
         "EFFICIENTNET_B0_CHECKPOINT_PATH",
-        ROOT_DIR / "models" / "efficientNet" / "artifacts" / "efficientnet_b0_best.pt",
+        ROOT_DIR / "outputs" / "models" / "efficientnet" / "efficientnet_b0_best.pt",
     )
 )
 EFFICIENTNET_B1_CHECKPOINT_PATH = Path(
     os.getenv(
         "EFFICIENTNET_B1_CHECKPOINT_PATH",
-        ROOT_DIR / "models" / "efficientNet" / "artifacts" / "efficientnet_b1_best.pt",
+        ROOT_DIR / "outputs" / "models" / "efficientnet" / "efficientnet_b1_best.pt",
     )
 )
 RESNET50_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "resnet50" / "resnet50_best.pt"

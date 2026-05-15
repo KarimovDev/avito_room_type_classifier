@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--checkpoint",
         type=Path,
-        default=ROOT_DIR / "models" / "efficientNet" / "artifacts" / "efficientnet_b1_best.pt",
+        default=ROOT_DIR / "outputs" / "models" / "efficientnet" / "efficientnet_b1_best.pt",
     )
     parser.add_argument("--image", type=Path, default=None)
     parser.add_argument("--sample-index", type=int, default=0)
@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=ROOT_DIR / "models" / "efficientNet" / "artifacts" / "grad_cam",
+        default=ROOT_DIR / "outputs" / "grad_cam" / "efficientnet",
     )
     return parser.parse_args()
 

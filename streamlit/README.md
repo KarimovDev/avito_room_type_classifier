@@ -57,8 +57,8 @@ STREAMLIT_ALLOW_MODEL_DOWNLOAD=1 just run-streamlit
 Для EfficientNet по умолчанию используются checkpoints:
 
 ```text
-models/efficientNet/artifacts/efficientnet_b0_best.pt
-models/efficientNet/artifacts/efficientnet_b1_best.pt
+outputs/models/efficientnet/efficientnet_b0_best.pt
+outputs/models/efficientnet/efficientnet_b1_best.pt
 ```
 
 Пути можно переопределить через `EFFICIENTNET_B0_CHECKPOINT_PATH` и

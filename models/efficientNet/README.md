@@ -48,9 +48,9 @@ just run --group efficientnet python -m models.efficientNet.train_efficientnet -
 Скрипт сохраняет:
 
 ```text
-models/efficientNet/artifacts/efficientnet_b0_best.pt
-models/efficientNet/artifacts/efficientnet_b0_metrics.json
-models/efficientNet/artifacts/model_comparison.csv
+outputs/models/efficientnet/efficientnet_b0_best.pt
+reports/metrics/efficientnet/efficientnet_b0_metrics.json
+reports/metrics/efficientnet/model_comparison.csv
 ```
 
 Основная метрика для ТЗ: `best_macro_f1`.
@@ -71,11 +71,11 @@ just grad-cam-efficientnet
 Для конкретного изображения:
 
 ```bash
-just run --group efficientnet --group interpretability python models/efficientNet/grad_cam.py --checkpoint models/efficientNet/artifacts/efficientnet_b1_best.pt --image data/raw/val_images/14333332896.jpg
+just run --group efficientnet --group interpretability python models/efficientNet/grad_cam.py --checkpoint outputs/models/efficientnet/efficientnet_b1_best.pt --image data/raw/val_images/14333332896.jpg
 ```
 
 Результаты сохраняются в:
 
 ```text
-models/efficientNet/artifacts/grad_cam/
+outputs/grad_cam/efficientnet/
 ```
