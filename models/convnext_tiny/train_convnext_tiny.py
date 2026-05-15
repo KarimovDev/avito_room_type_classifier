@@ -704,6 +704,9 @@ def main() -> None:
         "hyperparameters": hp,
         "best_epoch": best_ep,
         "best_macro_f1": float(best_f1) if math.isfinite(best_f1) else None,
+        "best_accuracy": best_metrics.get("accuracy"),
+        "best_train_loss": best_metrics.get("train_loss"),
+        "best_val_loss": best_metrics.get("val_loss"),
         "best_epoch_metrics": best_metrics,
         "checkpoint": None if not save_ckpt else to_project_relative_path(best_path),
         "last_checkpoint": None if not save_ckpt or not save_last else to_project_relative_path(last_path),
@@ -715,6 +718,7 @@ def main() -> None:
             "best_macro_f1": float(best_f1) if math.isfinite(best_f1) else None,
             "best_epoch": best_ep,
             "best_accuracy": best_metrics.get("accuracy"),
+            "best_train_loss": best_metrics.get("train_loss"),
             "best_val_loss": best_metrics.get("val_loss"),
         }
     )

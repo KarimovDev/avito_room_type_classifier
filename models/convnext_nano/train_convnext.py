@@ -92,6 +92,7 @@ def main():
     
     best_macro_f1 = 0.0
     best_epoch = 0
+    best_epoch_metrics = {}
     checkpoint_path = args.output_dir / "convnext_nano_best.pt"
     metrics_path = args.metrics_dir / "convnext_nano_metrics.json"
     idx_to_class = {str(class_id): label for class_id, label in load_label_mapping().items()}
@@ -157,6 +158,13 @@ def main():
         if macro_f1 > best_macro_f1:
             best_macro_f1 = macro_f1
             best_epoch = epoch + 1
+            best_epoch_metrics = {
+                "epoch": best_epoch,
+                "train_loss": float(epoch_train_loss),
+                "val_loss": float(epoch_val_loss),
+                "accuracy": float(val_acc / 100),
+                "macro_f1": float(macro_f1),
+            }
             if not args.no_save_checkpoint:
                 torch.save(
                     build_checkpoint(
@@ -178,6 +186,12 @@ def main():
             metrics = {
                 "epoch": int(epoch + 1),
                 "model": "convnext_nano",
+                "best_epoch": best_epoch,
+                "best_macro_f1": float(best_macro_f1),
+                "best_accuracy": best_epoch_metrics.get("accuracy"),
+                "best_train_loss": best_epoch_metrics.get("train_loss"),
+                "best_val_loss": best_epoch_metrics.get("val_loss"),
+                "best_epoch_metrics": best_epoch_metrics,
                 "train_loss": float(epoch_train_loss),
                 "val_loss": float(epoch_val_loss),
                 "accuracy": float(val_acc / 100),
@@ -213,6 +227,9 @@ def main():
         {
             "best_macro_f1": best_macro_f1,
             "best_epoch": best_epoch,
+            "best_accuracy": best_epoch_metrics.get("accuracy"),
+            "best_train_loss": best_epoch_metrics.get("train_loss"),
+            "best_val_loss": best_epoch_metrics.get("val_loss"),
         }
     )
     log_mlflow_params(

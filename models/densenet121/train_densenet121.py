@@ -601,6 +601,9 @@ def main() -> None:
         },
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
+        "best_accuracy": best_epoch_metrics.get("accuracy"),
+        "best_train_loss": best_epoch_metrics.get("train_loss"),
+        "best_val_loss": best_epoch_metrics.get("val_loss"),
         "best_epoch_metrics": best_epoch_metrics,
         "history": full_history,
         "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(finetune_checkpoint),
@@ -611,7 +614,9 @@ def main() -> None:
     log_mlflow_metrics(
         {
             "best_macro_f1": best_macro_f1,
+            "best_epoch": best_epoch,
             "best_accuracy": best_epoch_metrics.get("accuracy"),
+            "best_train_loss": best_epoch_metrics.get("train_loss"),
             "best_val_loss": best_epoch_metrics.get("val_loss"),
         }
     )

@@ -314,6 +314,9 @@ def main():
     metrics = {
         "model": "resnet50",
         "best_macro_f1": best_val_f1,
+        "best_accuracy": best_metrics.get("accuracy"),
+        "best_train_loss": best_metrics.get("train_loss"),
+        "best_val_loss": best_metrics.get("val_loss"),
         "best_epoch_metrics": best_metrics,
         "checkpoint": None if args.no_save_checkpoint else to_project_relative_path(args.output_dir / "resnet50_best.pt"),
         "hyperparameters": {
@@ -333,6 +336,7 @@ def main():
             "best_macro_f1": best_val_f1,
             "best_epoch": best_metrics.get("epoch"),
             "best_accuracy": best_metrics.get("accuracy"),
+            "best_train_loss": best_metrics.get("train_loss"),
             "best_val_loss": best_metrics.get("val_loss"),
         }
     )

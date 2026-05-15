@@ -398,6 +398,9 @@ def main() -> None:
         },
         "best_epoch": best_epoch,
         "best_macro_f1": best_macro_f1,
+        "best_accuracy": best_epoch_metrics.get("accuracy"),
+        "best_train_loss": best_epoch_metrics.get("train_loss"),
+        "best_val_loss": best_epoch_metrics.get("val_loss"),
         "best_epoch_metrics": best_epoch_metrics,
         "checkpoint": None if args.no_save_checkpoint else checkpoint_json_path,
         "stop_reason": stop_reason,
@@ -408,6 +411,7 @@ def main() -> None:
             "best_macro_f1": best_macro_f1,
             "best_epoch": best_epoch,
             "best_accuracy": best_epoch_metrics.get("accuracy"),
+            "best_train_loss": best_epoch_metrics.get("train_loss"),
             "best_val_loss": best_epoch_metrics.get("val_loss"),
         }
     )
