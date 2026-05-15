@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 from typing import Any
 
-from src.mlflow_utils import EXPERIMENT_NAME, TRACKING_DB
+from src.mlflow_utils import EXPERIMENT_NAME, setup_mlflow_tracking
 from src.training_helpers import PROJECT_ROOT, resolve_project_path, to_project_relative_path
 
 
@@ -52,7 +52,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def _load_mlflow():
-    """Импортирует MLflow для чтения локальных запусков"""
+    """Импортирует MLflow для чтения запусков"""
     try:
         import mlflow
     except ImportError as exc:
@@ -136,11 +136,8 @@ def _best_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
 
 def load_rows(all_runs: bool) -> list[dict[str, str]]:
     """Читает MLflow runs и возвращает строки для таблицы"""
-    if not TRACKING_DB.exists():
-        return []
-
     mlflow = _load_mlflow()
-    mlflow.set_tracking_uri(f"sqlite:///{TRACKING_DB}")
+    setup_mlflow_tracking(mlflow)
     experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
     if experiment is None:
         return []

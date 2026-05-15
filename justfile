@@ -24,9 +24,17 @@ install: install-data
 install-data: setup
     uv sync --group data
 
-# Зависимости для локального MLflow
+# Зависимости для MLflow и DagsHub
 install-tracking: setup
     uv sync --group tracking
+
+# Авторизоваться в DagsHub для remote MLflow
+dagshub-login:
+    uv run --group tracking dagshub login
+
+# Показать страницу общих экспериментов DagsHub
+dagshub-experiments:
+    @echo "https://dagshub.com/YashinSergey/room_type_classifier/experiments"
 
 # Зависимости для Streamlit-приложения
 install-streamlit: setup
@@ -168,7 +176,7 @@ train-convnext_nano EPOCHS="30" BATCH="32":
 train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
     uv run --group convnext_tiny --group tracking python -m models.convnext_tiny.train_convnext_tiny --config {{CONFIG}}
 
-# Открыть локальный MLflow UI
+# Открыть локальный MLflow UI в fallback-режиме
 mlflow-ui:
     uv run --group tracking mlflow ui --backend-store-uri sqlite:///mlflow.db
 

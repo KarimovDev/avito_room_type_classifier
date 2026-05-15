@@ -307,11 +307,25 @@ just train-convnext-nano
 just train-convnext-tiny
 ```
 
-MLflow используется локально, без регистрации и удаленного сервера. После обучения
-можно открыть интерфейс:
+MLflow логируется в DagsHub remote tracking. Перед первым обучением нужно
+установить зависимости и авторизоваться:
 
 ```bash
-just mlflow-ui
+just install-tracking
+just dagshub-login
+```
+
+После этого запуски обучения автоматически попадают в DagsHub:
+
+```text
+https://dagshub.com/YashinSergey/room_type_classifier/experiments
+```
+
+Если нужно временно использовать локальный MLflow без DagsHub, можно запустить
+обучение с переменной:
+
+```bash
+RTC_MLFLOW_LOCAL=1 just train-resnet18
 ```
 
 Таблица сравнения моделей строится из MLflow:

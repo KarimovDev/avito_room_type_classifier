@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 from typing import Any
 
@@ -8,6 +9,8 @@ from src.training_helpers import PROJECT_ROOT, to_project_relative_path
 
 
 EXPERIMENT_NAME = "room_type_classifier"
+REPO_OWNER = "YashinSergey"
+REPO_NAME = "room_type_classifier"
 TRACKING_DB = PROJECT_ROOT / "mlflow.db"
 ARTIFACTS_DIR = PROJECT_ROOT / "mlruns"
 
@@ -91,6 +94,26 @@ def log_mlflow_artifacts(paths: list[Path | str | None]) -> None:
             mlflow.log_artifact(str(file_path))
 
 
+def setup_mlflow_tracking(mlflow: Any) -> None:
+    """Настраивает DagsHub или локальный MLflow"""
+    if os.getenv("RTC_MLFLOW_LOCAL") == "1":
+        ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+        mlflow.set_tracking_uri(f"sqlite:///{TRACKING_DB}")
+        client = mlflow.tracking.MlflowClient()
+        if client.get_experiment_by_name(EXPERIMENT_NAME) is None:
+            client.create_experiment(EXPERIMENT_NAME, artifact_location=ARTIFACTS_DIR.as_uri())
+        mlflow.set_experiment(EXPERIMENT_NAME)
+        return
+
+    try:
+        import dagshub
+    except ImportError as exc:
+        raise RuntimeError("DagsHub не установлен. Выполните `just install-tracking`") from exc
+
+    dagshub.init(repo_owner=REPO_OWNER, repo_name=REPO_NAME, mlflow=True)
+    mlflow.set_experiment(EXPERIMENT_NAME)
+
+
 def start_mlflow_run(model_name: str, run_name: str, params: dict[str, Any]) -> Any:
     """Стартует MLflow run для train-скрипта"""
     mlflow = _load_mlflow()
@@ -98,12 +121,7 @@ def start_mlflow_run(model_name: str, run_name: str, params: dict[str, Any]) -> 
         print("MLflow не установлен, логирование пропущено")
         return None
 
-    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
-    mlflow.set_tracking_uri(f"sqlite:///{TRACKING_DB}")
-    client = mlflow.tracking.MlflowClient()
-    if client.get_experiment_by_name(EXPERIMENT_NAME) is None:
-        client.create_experiment(EXPERIMENT_NAME, artifact_location=ARTIFACTS_DIR.as_uri())
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    setup_mlflow_tracking(mlflow)
 
     run = mlflow.start_run(run_name=run_name)
     mlflow.set_tag("model", model_name)

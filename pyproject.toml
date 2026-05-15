@@ -17,6 +17,7 @@ data = [
   "torchvision==0.20.1",
 ]
 tracking = [
+  "dagshub==0.6.3",
   "mlflow==3.7.0",
 ]
 efficientnet = [
