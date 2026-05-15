@@ -107,6 +107,10 @@ check-training-outputs:
 compare-models:
     uv run --group tracking python -m src.compare_mlflow_models
 
+# Скачать лучшие чекпоинты из MLflow (DagsHub) в outputs/models для Streamlit
+pull-checkpoints *ARGS:
+    uv run --group tracking python -m src.pull_mlflow_checkpoints {{ARGS}}
+
 # Переустановить torch/torchvision из обычного PyPI
 pytorch-pypi:
     {{PYTORCH_PIP}} install --upgrade --reinstall torch torchvision
@@ -126,14 +130,14 @@ run-yolo:
 # Локальное обучение
 
 # Обучить EfficientNet B0
-train-efficientnet-b0 EPOCHS="30" BATCH="32":
+train-efficientnet-b0 EPOCHS="80" BATCH="32" EARLY_STOPPING_PATIENCE="8" LR_SCHEDULER="plateau":
     uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
-      --variant b0 --epochs {{EPOCHS}} --batch-size {{BATCH}}
+      --variant b0 --epochs {{EPOCHS}} --batch-size {{BATCH}} --early-stopping-patience {{EARLY_STOPPING_PATIENCE}} --lr-scheduler {{LR_SCHEDULER}}
 
 # Обучить EfficientNet B1
-train-efficientnet-b1 EPOCHS="30" BATCH="32":
+train-efficientnet-b1 EPOCHS="80" BATCH="32" IMAGE_SIZE="240" EARLY_STOPPING_PATIENCE="8" LR_SCHEDULER="plateau":
     uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
-      --variant b1 --epochs {{EPOCHS}} --batch-size {{BATCH}}
+      --variant b1 --epochs {{EPOCHS}} --batch-size {{BATCH}} --image-size {{IMAGE_SIZE}} --early-stopping-patience {{EARLY_STOPPING_PATIENCE}} --lr-scheduler {{LR_SCHEDULER}}
 
 # Старое короткое имя для EfficientNet B0
 train-efficientnet EPOCHS="30" BATCH="32":
@@ -182,7 +186,7 @@ mlflow-ui:
 
 # Построить Grad-CAM для EfficientNet
 grad-cam-efficientnet:
-    uv run --group efficientnet --group interpretability python models/efficientNet/grad_cam.py
+    uv run --group efficientnet --group interpretability python models/efficientNet/grad_cam.py --sample-index 0
 
 # Запустить Streamlit-приложение
 run-streamlit:

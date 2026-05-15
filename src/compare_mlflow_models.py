@@ -115,13 +115,25 @@ def _sort_key(row: dict[str, str]) -> tuple[float, str]:
     return (value if value is not None else -1.0, row["model"])
 
 
+def _group_key(row: dict[str, str]) -> str:
+    model = row["model"]
+    variant = row["variant"]
+    if variant:
+        return f"{model}:{variant}"
+    return model
+
+
 def _best_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     best: dict[str, dict[str, str]] = {}
     for row in rows:
-        key = row["model"]
+        key = _group_key(row)
         if key not in best or _sort_key(row) > _sort_key(best[key]):
             best[key] = row
     return list(best.values())
+
+
+def load_best_rows() -> list[dict[str, str]]:
+    return load_rows(all_runs=False)
 
 
 def load_rows(all_runs: bool) -> list[dict[str, str]]:

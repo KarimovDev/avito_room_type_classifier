@@ -1,0 +1,5 @@
+model,variant,run_name,metric_name,best_metric,best_macro_f1,best_accuracy,best_val_loss,best_epoch,checkpoint,mlflow_run_id
+efficientnet,b1,efficientnet_b1,macro_f1,0.724575,0.724575,,1.018191,29,outputs/models/efficientnet/efficientnet_b1_best.pt,2c6f1a8131574377a5ddf3585f7e280b
+efficientnet,b0,efficientnet_b0,macro_f1,0.709497,0.709497,,1.008192,13,outputs/models/efficientnet/efficientnet_b0_best.pt,74cb21ed96ce4e55a036f1aa202ee0d3
+densenet121,,densenet121_2026-05-15_14-54-19,macro_f1,0.703104,0.703104,0.708595,1.425297,,,fe4b1ebbfeb34b25bc043720d7a9df38
+resnet18,,resnet18_2026-05-15_10-28-07,macro_f1,0.685184,0.685184,0.696017,1.088804,10,outputs/models/resnet18/resnet18_best.pt,5e1b27d8438649ff81ca97b8dcceb458

@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--class-balance", choices=["loss", "none"], default="loss")
     parser.add_argument(
         "--use-weighted-sampling",
-        action="store_true",
+        action="store_false",
         help="Использовать WeightedRandomSampler для балансировки train DataLoader",
     )
     parser.add_argument(

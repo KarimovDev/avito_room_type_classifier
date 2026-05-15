@@ -1,0 +1,3 @@
+model,variant,num_classes,best_epoch,best_macro_f1,checkpoint
+efficientnet,b0,19,13,0.7094973129699172,outputs/models/efficientnet/efficientnet_b0_best.pt
+efficientnet,b1,19,29,0.7245754595039925,outputs/models/efficientnet/efficientnet_b1_best.pt
