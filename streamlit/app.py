@@ -49,6 +49,7 @@ RESNET18_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "resnet18" / "resnet18_b
 DENSENET121_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "densenet121" / "densenet121_best.pt"
 CONVNEXT_NANO_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "convnext_nano" / "convnext_nano_best.pt"
 CONVNEXT_TINY_MODEL_PATH = ROOT_DIR / "outputs" / "models" / "convnext_tiny" / "convnext_tiny_best.pt"
+ENSEMBLE_WEIGHTS = (0.34349677767909004, 0.3383500954431325, 0.3181531268777774)
 
 
 @dataclass(frozen=True)
@@ -532,7 +533,79 @@ def convnext_tiny_predict(image_bytes: bytes, checkpoint_path: Path) -> tuple[st
     raise RuntimeError(f"Convnext Tiny checkpoint is unavailable: {checkpoint_path}")
 
 
+def final_ensemble_is_available() -> bool:
+    return (
+        CONVNEXT_NANO_MODEL_PATH.exists()
+        and RESNET50_MODEL_PATH.exists()
+        and RESNET18_MODEL_PATH.exists()
+    )
+
+
+@st.cache_data(show_spinner=False)
+def _predict_final_ensemble_cached(
+    image_bytes: bytes,
+    convnext_nano_checkpoint_path: str,
+    resnet50_checkpoint_path: str,
+    resnet18_checkpoint_path: str,
+) -> tuple[str, float] | None:
+    loaded_models = [
+        load_convnext_nano_model(convnext_nano_checkpoint_path),
+        load_resnet50_model(resnet50_checkpoint_path),
+        load_resnet18_model(resnet18_checkpoint_path),
+    ]
+    if any(loaded_model is None for loaded_model in loaded_models):
+        return None
+
+    try:
+        import torch
+    except ImportError:
+        return None
+
+    image = load_rgb_image(image_bytes)
+    ensemble_probabilities = None
+    weights_sum = sum(ENSEMBLE_WEIGHTS)
+
+    for weight, loaded_model in zip(ENSEMBLE_WEIGHTS, loaded_models, strict=True):
+        model, device, image_size = loaded_model
+        preprocess = get_val_transforms(image_size=image_size)
+        tensor = preprocess(image).unsqueeze(0).to(device)
+
+        with torch.inference_mode():
+            probabilities = torch.softmax(model(tensor), dim=1)[0].detach().cpu()
+
+        normalized_weight = weight / weights_sum
+        if ensemble_probabilities is None:
+            ensemble_probabilities = probabilities * normalized_weight
+        else:
+            ensemble_probabilities += probabilities * normalized_weight
+
+    probability, class_index = torch.max(ensemble_probabilities, dim=0)
+    labels = load_room_type_labels()
+    class_id = int(class_index.item())
+    prediction = labels.get(class_id, f"class_{class_id}")
+    return prediction, float(probability.item())
+
+
+def final_ensemble_predict(image_bytes: bytes) -> tuple[str, float]:
+    prediction = _predict_final_ensemble_cached(
+        image_bytes,
+        str(CONVNEXT_NANO_MODEL_PATH),
+        str(RESNET50_MODEL_PATH),
+        str(RESNET18_MODEL_PATH),
+    )
+    if prediction is not None:
+        return prediction
+    raise RuntimeError("Final ensemble checkpoints are unavailable.")
+
+
 MODELS = [
+    ModelConfig(
+        key="final_ensemble",
+        title="Final ensemble",
+        description="Итоговый ансамбль ConvNeXt Nano + ResNet50 + ResNet18.",
+        predictor=final_ensemble_predict,
+        is_available=final_ensemble_is_available,
+    ),
     ModelConfig(
         key="yolo_scene_classifier",
         title="YOLO scene classifier",
@@ -642,6 +715,10 @@ def render_sidebar() -> list[ModelConfig]:
         st.sidebar.success("ConvNext Tiny checkpoint найден")
     else:
         st.sidebar.info("ConvNext Tiny checkpoint не найден")
+    if final_ensemble_is_available():
+        st.sidebar.success("Final ensemble checkpoints найдены")
+    else:
+        st.sidebar.info("Final ensemble требует ConvNext Nano, ResNet50 и ResNet18 checkpoints")
 
     return selected_models
 

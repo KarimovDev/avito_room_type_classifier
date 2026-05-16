@@ -36,7 +36,7 @@ dagshub-login:
 dagshub-experiments:
     @echo "https://dagshub.com/YashinSergey/room_type_classifier/experiments"
 
-# Зависимости для Streamlit-приложения
+# Зависимости для Streamlit
 install-streamlit: setup
     uv sync --group streamlit --group yolo --group efficientnet --group resnet18 --group resnet50 --group densenet121 --group convnext_nano --group convnext_tiny
 
@@ -182,6 +182,10 @@ train-convnext-tiny CONFIG="models/convnext_tiny/train_config.json":
 eval-ensemble:
     uv run --group convnext_nano --group resnet50 --group resnet18 --group tracking python -m src.evaluate_ensemble \
       --weighting val_f1 --run-name ensemble_convnext_nano_resnet50_resnet18 --log-mlflow --no-mlflow-local
+
+# Сделать submission ансамблем ConvNeXt Nano + ResNet50 + ResNet18 в data/submissions
+make-submission:
+    uv run --group convnext_nano --group resnet50 --group resnet18 python -m src.infer_ensemble
 
 # Открыть локальный MLflow UI в fallback-режиме
 mlflow-ui:

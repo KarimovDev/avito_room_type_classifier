@@ -1,41 +1,25 @@
 # Room Type Classifier
 
-Классификация типа комнаты по изображению. В репозитории лежат несколько baseline-моделей: EfficientNet, ResNet, DenseNet, ConvNeXt и небольшой YOLO inference-run.
+Проект по классификации типа комнаты по изображению
+Кейс: Avito, определение одного из 19 типов помещений по фотографии
+Основная метрика качества: Macro F1
+Лучший одиночный вариант: ConvNeXt Nano
+Итоговое решение для submission: ансамбль ConvNeXt Nano, ResNet50 и ResNet18
 
-## Установка
+## Что сделано
 
-Нужны Python 3.12, `uv` и желательно `just`.
-
-```bash
-pip install uv
-uv tool install rust-just
-```
-
-Базовые зависимости:
-
-```bash
-just install
-```
-
-Все группы сразу:
-
-```bash
-just install-all
-```
-
-Отдельные группы:
-
-```bash
-just install-efficientnet
-just install-resnet18
-just install-densenet121
-just install-convnext-tiny
-just install-streamlit
-```
+- подготовлен preprocessing для train, val и test
+- удален лишний train-класс, которого нет в задании и validation
+- классы приведены к диапазону 0-18
+- обучены несколько CNN-моделей
+- эксперименты залогированы в MLflow через DagsHub
+- собран итоговый ансамбль из трех моделей
+- подготовлен submission на test
+- сделан Streamlit-прототип для проверки изображений
 
 ## Данные
 
-Raw-данные ожидаются примерно так:
+Raw-данные ожидаются в таком виде:
 
 ```text
 data/raw/
@@ -47,85 +31,125 @@ data/raw/
   test_images/
 ```
 
-Подготовка processed CSV:
-
-```bash
-just prepare-data
-```
-
-С эвристическими добавками:
+Препроцессинг:
 
 ```bash
 just prepare-data-with-heuristics
-just prepare-data-heuristics cabinet,dressing_room
 ```
 
-После этого появляются файлы в `data/processed/`.
+Processed-файлы сохраняются в:
 
-## Запуск
+```text
+data/processed/
+```
 
-Обучение:
+## Установка
+
+Нужны Python 3.12, `uv` и `just`.
+
+```bash
+pip install uv
+uv tool install rust-just
+```
+
+Установа зависимостей:
+
+```bash
+just install-all
+```
+
+Установка зависимостей для Streamlit:
+
+```bash
+just install-streamlit
+```
+
+## Обучение
+
+Примеры команд:
 
 ```bash
 just train-resnet18 30
+just train-resnet50 30 32
 just train-efficientnet-b0 30 32
+just train-efficientnet-b1 30 32
 just train-densenet121 2 8 5 32
+just train-convnext-nano 25 32
 just train-convnext-tiny
 ```
 
-YOLO demo:
+Сравнение моделей(MLflow):
 
 ```bash
-just run-yolo
+just compare-models
 ```
 
-Streamlit:
+Оценка итогового ансамбля:
+
+```bash
+just eval-ensemble
+```
+
+## Submission
+
+Генерация submission:
+
+```bash
+just make-submission
+```
+
+Файл сохраняется локально:
+
+```text
+data/submissions/submission_ensemble.csv
+```
+
+## Streamlit
+
+Запуск streamlit-интерфейса:
 
 ```bash
 just run-streamlit
 ```
 
-MLflow локально:
+Интерфейс позволяет загрузить изображение и получить предсказания выбранных моделей. В нем доступен финальный ансамбль и отдельные модели
 
-```bash
-RTC_MLFLOW_LOCAL=1 just mlflow-ui
+## Эксперименты
+
+Эксперименты логируются в MLflow через DagsHub
+
+Ссылка:
+
+```text
+https://dagshub.com/YashinSergey/room_type_classifier/experiments
 ```
 
-Проверка сохранённых метрик и чекпоинтов:
+Основные метрики:
 
-```bash
-just check-training-outputs
-```
+- best_macro_f1
+- best_accuracy
+- best_train_loss
+- best_val_loss
+- best_epoch
 
-## Основные команды
-
-```bash
-just --list
-just prepare-data
-just compare-models
-just grad-cam-efficientnet
-just docker-build
-just docker-run-streamlit
-```
-
-## Структура
+## Структура проекта
 
 ```text
 src/
   dataset.py
   dataloaders.py
-  transforms.py
-  metrics.py
   preprocess_data.py
-  mlflow_utils.py
+  transforms.py
+  infer_ensemble.py
+  evaluate_ensemble.py
 
 models/
+  convnext_nano/
+  convnext_tiny/
+  densenet121/
   efficientNet/
   resnet18/
   resnet50/
-  densenet121/
-  convnext_nano/
-  convnext_tiny/
   yolo/
 
 streamlit/
@@ -133,8 +157,11 @@ streamlit/
 
 reports/metrics/
 outputs/models/
-data/raw/
-data/processed/
+data/
 ```
 
-Чекпоинты обычно сохраняются в `outputs/models/<model>/`, метрики - в `reports/metrics/<model>/`.
+Чекпоинты моделей сохраняются в `outputs/models/`.
+
+Метрики сохраняются в `reports/metrics/`.
+
+Итоговый отчет: https://docs.google.com/document/d/1LT4T90vRei1lcjus16heISa5xYsl4cUo/edit?usp=sharing&ouid=103046931125072858111&rtpof=true&sd=true

@@ -1,0 +1,37 @@
+{
+  "run_id": "2026-05-16_19-50-46",
+  "submission": "data/submissions/submission_ensemble.csv",
+  "test_csv": "data/processed/test_df.csv",
+  "test_images": "data/raw/test_images",
+  "num_rows": 48003,
+  "model_predicted_rows": 48003,
+  "downloaded_images": 0,
+  "weights": [
+    0.3434967776790901,
+    0.33835009544313255,
+    0.31815312687777747
+  ],
+  "models": [
+    {
+      "name": "convnext_nano",
+      "checkpoint": "outputs/models/convnext_nano/convnext_nano_best.pt",
+      "image_size": 224,
+      "num_classes": 19
+    },
+    {
+      "name": "resnet50",
+      "checkpoint": "outputs/models/resnet50/resnet50_best.pt",
+      "image_size": 224,
+      "num_classes": 19
+    },
+    {
+      "name": "resnet18",
+      "checkpoint": "outputs/models/resnet18/resnet18_best.pt",
+      "image_size": 224,
+      "num_classes": 19
+    }
+  ],
+  "confidence_mean": 0.7208151097708184,
+  "confidence_min": 0.13829392660409212,
+  "confidence_max": 0.9966729283332825
+}

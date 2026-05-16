@@ -109,7 +109,8 @@ def create_test_dataloader(
         test_image_root=None,
         batch_size=32,
         num_workers=2,
-        image_size=224
+        image_size=224,
+        filter_can_predict=True,
 ):
     test_csv_path = test_csv_path or os.path.join(DEFAULT_PROCESSED_DIR, "test_df.csv")
     test_image_root = test_image_root or os.path.join(DEFAULT_RAW_DIR, "test_images")
@@ -119,7 +120,7 @@ def create_test_dataloader(
         image_root=test_image_root,
         transform=get_val_transforms(image_size=image_size),
         target_col=None,
-        filter_can_predict=True
+        filter_can_predict=filter_can_predict
     )
 
     test_loader = DataLoader(

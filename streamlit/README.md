@@ -40,7 +40,7 @@ Docker-образ ставит `streamlit` и группы всех моделе
 
 Сервис показывает только реальные доступные модели. Если checkpoint или вес не найден, соответствующая модель будет отключена в сайдбаре.
 
-В сравнении участвуют YOLO, EfficientNet B0/B1, ResNet18, ResNet50, DenseNet121, ConvNeXt Nano и ConvNeXt Tiny.
+В сравнении участвуют итоговый ансамбль, YOLO, EfficientNet B0/B1, ResNet18, ResNet50, DenseNet121, ConvNeXt Nano и ConvNeXt Tiny.
 
 Для `YOLO scene classifier` используется внешний pretrained вес:
 
@@ -69,6 +69,14 @@ outputs/models/efficientnet/efficientnet_b1_best.pt
 ```text
 outputs/models/resnet18/resnet18_best.pt
 outputs/models/resnet50/resnet50_best.pt
+```
+
+Для итогового ансамбля используются checkpoints:
+
+```text
+outputs/models/convnext_nano/convnext_nano_best.pt
+outputs/models/resnet50/resnet50_best.pt
+outputs/models/resnet18/resnet18_best.pt
 ```
 
 Для ConvNeXt Nano по умолчанию используется checkpoint:
