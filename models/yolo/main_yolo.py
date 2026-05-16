@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 
 import torch
@@ -30,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project-checkpoint", type=Path, default=Path("outputs/models/yolo/yolo_best.pt"))
     parser.add_argument("--max-images", type=int, default=100)
     parser.add_argument("--confidence", type=float, default=0.25)
+    parser.add_argument("--run-name", default=None)
     return parser.parse_args()
 
 
@@ -161,9 +163,11 @@ def main() -> int:
         raise ValueError("paths are not configured")
 
     # inference run, not training
+    run_name = args.run_name or f"yolo_inference_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
     start_mlflow_run(
         "yolo",
-        "yolo_inference",
+        run_name,
         {
             "model": "yolo",
             "model_name": "yolov8m-scene-classification",

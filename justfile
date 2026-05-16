@@ -127,8 +127,6 @@ pytorch-cu130:
 run-yolo:
     uv run --group yolo --group tracking python -m models.yolo.main_yolo
 
-# Локальное обучение
-
 # Обучить EfficientNet B0
 train-efficientnet-b0 EPOCHS="80" BATCH="32" EARLY_STOPPING_PATIENCE="8" LR_SCHEDULER="plateau":
     uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
@@ -199,7 +197,11 @@ run-streamlit:
 
 # Запустить произвольную команду через uv
 run *ARGS:
-    uv run {{ARGS}}
+    @if [ "{{ARGS}}" = "yolo" ]; then \
+        just run-yolo; \
+    else \
+        uv run {{ARGS}}; \
+    fi
 
 # Docker
 

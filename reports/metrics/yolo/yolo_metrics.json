@@ -1,0 +1,1314 @@
+{
+  "model": "yolo",
+  "model_name": "yolov8m-scene-classification",
+  "metric_name": "avg_top1_confidence",
+  "best_metric": 0.018557970020920037,
+  "checkpoint": "outputs/models/yolo/yolo_best.pt",
+  "num_images": 100,
+  "confidence_threshold": 0.25,
+  "load_time_sec": 0.0448,
+  "predict_time_sec": 1.8507,
+  "avg_time_per_image_sec": 0.0185,
+  "predictions": [
+    {
+      "image": "data/raw/val_images/13281186395.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017933443188667297
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.016866954043507576
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13281186525.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01771397329866886
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017428891733288765
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13281186732.jpg",
+      "top_predictions": [
+        {
+          "class_name": "grocerystore",
+          "confidence": 0.01799553446471691
+        },
+        {
+          "class_name": "poolinside",
+          "confidence": 0.017741918563842773
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13294434080.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.016860581934452057
+        },
+        {
+          "class_name": "airport_inside",
+          "confidence": 0.016176113858819008
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13300561277.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017439227551221848
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017214275896549225
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13536362292.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019173232838511467
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01848362386226654
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13536364310.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018748704344034195
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018002325668931007
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13582317076.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017936309799551964
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017685042694211006
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13950815844.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.019571131095290184
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017420055344700813
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13978812603.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018913349136710167
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018082953989505768
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/13984867998.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01849084161221981
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.016999555751681328
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14060846681.jpg",
+      "top_predictions": [
+        {
+          "class_name": "warehouse",
+          "confidence": 0.016949478536844254
+        },
+        {
+          "class_name": "toystore",
+          "confidence": 0.016848184168338776
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14113678089.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.017806004732847214
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017588311806321144
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14148783505.jpg",
+      "top_predictions": [
+        {
+          "class_name": "poolinside",
+          "confidence": 0.020293956622481346
+        },
+        {
+          "class_name": "airport_inside",
+          "confidence": 0.01643938012421131
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14153417739.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020668841898441315
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.0177881121635437
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14170696049.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020193109288811684
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017988743260502815
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14188399907.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.01860552839934826
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018083767965435982
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14188400235.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019087044522166252
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018162429332733154
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14207690553.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.019501950591802597
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017111098393797874
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14253779725.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018694942817091942
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.01850646175444126
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14253787813.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01785222813487053
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017815854400396347
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14254796425.jpg",
+      "top_predictions": [
+        {
+          "class_name": "movietheater",
+          "confidence": 0.01780863106250763
+        },
+        {
+          "class_name": "meeting_room",
+          "confidence": 0.017534097656607628
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14256079482.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01834780164062977
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.016939066350460052
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14256362876.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.01837778463959694
+        },
+        {
+          "class_name": "nursery",
+          "confidence": 0.01711001992225647
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14256375869.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017883429303765297
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017466038465499878
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14297836270.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.016840843483805656
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.016438428312540054
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14298463344.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019932255148887634
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017842145636677742
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14301868231.jpg",
+      "top_predictions": [
+        {
+          "class_name": "restaurant",
+          "confidence": 0.01695346273481846
+        },
+        {
+          "class_name": "gym",
+          "confidence": 0.016847290098667145
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14308346715.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019584016874432564
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01812559738755226
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14310005725.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018064487725496292
+        },
+        {
+          "class_name": "pantry",
+          "confidence": 0.017672359943389893
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14315148627.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019245341420173645
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017826996743679047
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14319404254.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.018103333190083504
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01783098094165325
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14320226391.jpg",
+      "top_predictions": [
+        {
+          "class_name": "warehouse",
+          "confidence": 0.016579046845436096
+        },
+        {
+          "class_name": "toystore",
+          "confidence": 0.016408082097768784
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14320543516.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.01931222900748253
+        },
+        {
+          "class_name": "restaurant",
+          "confidence": 0.01726752519607544
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14320544325.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017717743292450905
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.01717202365398407
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14322071118.jpg",
+      "top_predictions": [
+        {
+          "class_name": "locker_room",
+          "confidence": 0.019195517525076866
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.019026733934879303
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14322071451.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017915938049554825
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017528733238577843
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14322071497.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.016586827114224434
+        },
+        {
+          "class_name": "subway",
+          "confidence": 0.016446588560938835
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14323904422.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.018527554348111153
+        },
+        {
+          "class_name": "restaurant",
+          "confidence": 0.01732754521071911
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14323906119.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.01878235675394535
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018039224669337273
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14330392795.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.018063107505440712
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017073659226298332
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14330393172.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017597047612071037
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.01758606918156147
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14330394154.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018339933827519417
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017539169639348984
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14333257346.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01825062744319439
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017398105934262276
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14333332896.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01778602972626686
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017060328274965286
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14333512493.jpg",
+      "top_predictions": [
+        {
+          "class_name": "waitingroom",
+          "confidence": 0.0170239619910717
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.016743136569857597
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339322269.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017414111644029617
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017095068469643593
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339326302.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020657114684581757
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018325647339224815
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339327065.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020887108519673347
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018404947593808174
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339331477.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.017169293016195297
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01688121259212494
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339725034.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020115690305829048
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018684444949030876
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14339725061.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.0176945012062788
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017050670459866524
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14342681669.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.017829502001404762
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017709027975797653
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14342819909.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017468847334384918
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.017035547643899918
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14342821495.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.01992926001548767
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018119676038622856
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14343794679.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018566114827990532
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.01736786589026451
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14343795533.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01844612881541252
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017213890329003334
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14343797018.jpg",
+      "top_predictions": [
+        {
+          "class_name": "poolinside",
+          "confidence": 0.029301447793841362
+        },
+        {
+          "class_name": "airport_inside",
+          "confidence": 0.01665707863867283
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14343972501.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01809651218354702
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.017108380794525146
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14344841690.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018025659024715424
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017465345561504364
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14344843430.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01784394308924675
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017405100166797638
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14345095573.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01826442778110504
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017420776188373566
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14345095590.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017208851873874664
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01690075173974037
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14345294059.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017802003771066666
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017511287704110146
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14348035303.jpg",
+      "top_predictions": [
+        {
+          "class_name": "poolinside",
+          "confidence": 0.018235795199871063
+        },
+        {
+          "class_name": "greenhouse",
+          "confidence": 0.01715017482638359
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14349960172.jpg",
+      "top_predictions": [
+        {
+          "class_name": "subway",
+          "confidence": 0.016968591138720512
+        },
+        {
+          "class_name": "bowling",
+          "confidence": 0.016881460323929787
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14350339077.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.0186668261885643
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018162807449698448
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351324147.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.016879303380846977
+        },
+        {
+          "class_name": "pantry",
+          "confidence": 0.016720008105039597
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351324578.jpg",
+      "top_predictions": [
+        {
+          "class_name": "subway",
+          "confidence": 0.016788803040981293
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.016727976500988007
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351393520.jpg",
+      "top_predictions": [
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01802610419690609
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017564956098794937
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351531101.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01704275608062744
+        },
+        {
+          "class_name": "pantry",
+          "confidence": 0.01695416495203972
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351680062.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018695294857025146
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017451737076044083
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351680172.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.020129797980189323
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018490135669708252
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351709646.jpg",
+      "top_predictions": [
+        {
+          "class_name": "pantry",
+          "confidence": 0.017448045313358307
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01655983366072178
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351715372.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018544241786003113
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.018043208867311478
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351715450.jpg",
+      "top_predictions": [
+        {
+          "class_name": "meeting_room",
+          "confidence": 0.01826666295528412
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017478449270129204
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14351810410.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018318571150302887
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018291272222995758
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14354571495.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01788994111120701
+        },
+        {
+          "class_name": "corridor",
+          "confidence": 0.017141258344054222
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14354668441.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.02327047660946846
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018526457250118256
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14354668582.jpg",
+      "top_predictions": [
+        {
+          "class_name": "pantry",
+          "confidence": 0.017080331221222878
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017077317461371422
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14354829456.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.02327047660946846
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018526457250118256
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14355218479.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.018186679109930992
+        },
+        {
+          "class_name": "restaurant",
+          "confidence": 0.01679724082350731
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14358449028.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.02021183632314205
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01844888925552368
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14358458742.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.021727994084358215
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018678542226552963
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14359607334.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018675176426768303
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01807323656976223
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14359645639.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.01760500855743885
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01753738522529602
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14360359137.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.02166139893233776
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.018506716936826706
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14361874520.jpg",
+      "top_predictions": [
+        {
+          "class_name": "waitingroom",
+          "confidence": 0.017585420981049538
+        },
+        {
+          "class_name": "laundromat",
+          "confidence": 0.016655657440423965
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14363841497.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01776796393096447
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017239676788449287
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14364337324.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.019987519830465317
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.01865627057850361
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14364809473.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017927290871739388
+        },
+        {
+          "class_name": "restaurant",
+          "confidence": 0.017747705802321434
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14364809860.jpg",
+      "top_predictions": [
+        {
+          "class_name": "restaurant",
+          "confidence": 0.01736491359770298
+        },
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017158741131424904
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14364907858.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01818832941353321
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017577940598130226
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14365343156.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.017365455627441406
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.01689702458679676
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14365860422.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017672425135970116
+        },
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017339665442705154
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14366688369.jpg",
+      "top_predictions": [
+        {
+          "class_name": "livingroom",
+          "confidence": 0.017164429649710655
+        },
+        {
+          "class_name": "restaurant",
+          "confidence": 0.016889140009880066
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14368578765.jpg",
+      "top_predictions": [
+        {
+          "class_name": "corridor",
+          "confidence": 0.018608061596751213
+        },
+        {
+          "class_name": "locker_room",
+          "confidence": 0.017732342705130577
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14368950405.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.017548002302646637
+        },
+        {
+          "class_name": "pantry",
+          "confidence": 0.01730375364422798
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14369735579.jpg",
+      "top_predictions": [
+        {
+          "class_name": "greenhouse",
+          "confidence": 0.02100336365401745
+        },
+        {
+          "class_name": "poolinside",
+          "confidence": 0.01839596778154373
+        }
+      ]
+    },
+    {
+      "image": "data/raw/val_images/14371203478.jpg",
+      "top_predictions": [
+        {
+          "class_name": "kitchen",
+          "confidence": 0.018054472282528877
+        },
+        {
+          "class_name": "nursery",
+          "confidence": 0.016844265162944794
+        }
+      ]
+    }
+  ]
+}
