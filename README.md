@@ -165,3 +165,5 @@ data/
 Метрики сохраняются в `reports/metrics/`.
 
 Итоговый отчет: https://docs.google.com/document/d/1LT4T90vRei1lcjus16heISa5xYsl4cUo/edit?usp=sharing&ouid=103046931125072858111&rtpof=true&sd=true
+
+Презентация: https://docs.google.com/presentation/d/1Wa8_ZrLCPGx9kds4LiGtT-41lT_W1HoH/edit?usp=sharing&ouid=103046931125072858111&rtpof=true&sd=true

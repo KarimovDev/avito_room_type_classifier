@@ -46,13 +46,24 @@ def flatten_params(params: dict[str, Any], prefix: str = "") -> dict[str, str | 
     return flat
 
 
+def _to_finite_float(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isfinite(number):
+        return number
+    return None
+
+
 def numeric_metrics(metrics: dict[str, Any]) -> dict[str, float]:
     out: dict[str, float] = {}
     for key, value in metrics.items():
-        if isinstance(value, bool):
-            continue
-        if isinstance(value, int | float) and math.isfinite(float(value)):
-            out[key] = float(value)
+        number = _to_finite_float(value)
+        if number is not None:
+            out[key] = number
     return out
 
 
