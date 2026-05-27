@@ -1,3 +1,4 @@
-model,variant,num_classes,best_epoch,best_macro_f1,checkpoint
-efficientnet,b0,19,13,0.7094973129699172,outputs/models/efficientnet/efficientnet_b0_best.pt
-efficientnet,b1,19,29,0.7245754595039925,outputs/models/efficientnet/efficientnet_b1_best.pt
+model,variant,num_classes,best_epoch,best_macro_f1,best_accuracy,best_train_loss,best_val_loss,checkpoint
+efficientnet,b0,19,13,0.7094973129699172,,,,outputs/models/efficientnet/efficientnet_b0_best.pt
+efficientnet,b1,19,29,0.7245754595039925,,,,outputs/models/efficientnet/efficientnet_b1_best.pt
+efficientnet,b0,19,66,0.5746673689423057,0.5870020964360587,1.3305167670076994,1.4034217583558344,outputs/models/efficientnet/efficientnet_b0_head_best.pt

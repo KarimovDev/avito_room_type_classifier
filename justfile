@@ -137,6 +137,16 @@ train-efficientnet-b1 EPOCHS="80" BATCH="32" IMAGE_SIZE="240" EARLY_STOPPING_PAT
     uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
       --variant b1 --epochs {{EPOCHS}} --batch-size {{BATCH}} --image-size {{IMAGE_SIZE}} --early-stopping-patience {{EARLY_STOPPING_PATIENCE}} --lr-scheduler {{LR_SCHEDULER}}
 
+# Обучить EfficientNet B0 с замороженным backbone (только classifier)
+train-efficientnet-b0-freeze-backbone EPOCHS="80" BATCH="32" EARLY_STOPPING_PATIENCE="8" LR_SCHEDULER="plateau":
+    uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
+      --variant b0 --epochs {{EPOCHS}} --batch-size {{BATCH}} --early-stopping-patience {{EARLY_STOPPING_PATIENCE}} --lr-scheduler {{LR_SCHEDULER}} --freeze-backbone
+
+# Обучить EfficientNet B1 с замороженным backbone (только classifier)
+train-efficientnet-b1-freeze-backbone EPOCHS="80" BATCH="32" IMAGE_SIZE="240" EARLY_STOPPING_PATIENCE="8" LR_SCHEDULER="plateau":
+    uv run --group efficientnet --group tracking python -m models.efficientNet.train_efficientnet \
+      --variant b1 --epochs {{EPOCHS}} --batch-size {{BATCH}} --image-size {{IMAGE_SIZE}} --early-stopping-patience {{EARLY_STOPPING_PATIENCE}} --lr-scheduler {{LR_SCHEDULER}} --freeze-backbone
+
 # Старое короткое имя для EfficientNet B0
 train-efficientnet EPOCHS="30" BATCH="32":
     just train-efficientnet-b0 {{EPOCHS}} {{BATCH}}

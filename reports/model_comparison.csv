@@ -3,16 +3,7 @@ ensemble,,ensemble_convnext_nano_resnet50_resnet18,macro_f1,0.781879,0.781879,0.
 convnext_nano,,convnext_nano,macro_f1,0.759844,0.759844,0.775681,,1.431917,18,outputs/models/convnext_nano/convnext_nano_best.pt,19d36405757246dd918d4583fc476da4
 resnet50,,resnet50,macro_f1,0.748459,0.748459,0.761006,0.056951,0.834988,18,outputs/models/resnet50/resnet50_best.pt,4de4da7c17f64c7d8850beaeb9f56cd4
 convnext_tiny,,convnext_tiny_2026-05-16_14-20-45_871716,macro_f1,0.744368,0.744368,0.763103,0.073793,1.240919,9,outputs/models/convnext_tiny/convnext_tiny_best.pt,116cdf8b7ce1458b8a6b0a9900402562
-resnet50,,resnet50,macro_f1,0.741627,0.741627,0.750524,0.039750,0.857675,13,outputs/models/resnet50/resnet50_best.pt,c1dd21418f95478a9a9a2c260dfc4a24
-convnext_tiny,,convnext_tiny_2026-05-15_21-46-16_597032,macro_f1,0.735551,0.735551,0.752621,0.362676,0.891094,4,outputs/models/convnext_tiny/convnext_tiny_best.pt,3c638fa021434c3ba064225052bc6d42
-convnext_tiny,,convnext_tiny_2026-05-16_09-42-35_868252,macro_f1,0.731140,0.731140,0.744235,0.179083,0.933995,18,outputs/models/convnext_tiny/convnext_tiny_best.pt,a16692d7fc5d4d2591be6ae0a7a5b41d
 efficientnet,b1,efficientnet_b1,macro_f1,0.724575,0.724575,0.740042,0.140487,0.987675,29,outputs/models/efficientnet/efficientnet_b1_best.pt,2c6f1a8131574377a5ddf3585f7e280b
 densenet121,,densenet121_2026-05-15_14-54-19,macro_f1,0.722025,0.722025,0.725367,0.693773,1.370987,11,outputs/models/densenet121/densenet121_best.pt,fe4b1ebbfeb34b25bc043720d7a9df38
 efficientnet,b0,efficientnet_b0,macro_f1,0.709497,0.709497,0.721174,0.139343,1.000612,13,outputs/models/efficientnet/efficientnet_b0_best.pt,74cb21ed96ce4e55a036f1aa202ee0d3
 resnet18,,resnet18_2026-05-16_13-53-52,macro_f1,0.703782,0.703782,0.716981,0.060073,1.058664,11,outputs/models/resnet18/resnet18_best.pt,3831df62f2ea4276a0359b56e2337e4a
-resnet18,,resnet18_2026-05-15_10-28-07,macro_f1,0.685184,0.685184,0.696017,0.071922,1.088804,10,outputs/models/resnet18/resnet18_best.pt,5e1b27d8438649ff81ca97b8dcceb458
-convnext_tiny,,convnext_tiny_2026-05-16_16-26-16_012191,macro_f1,0.647196,0.647196,0.672956,,1.072087,,,cd7268e0b8e0496bbf6105d25c44bed3
-yolo,,yolo_inference,avg_top1_confidence,0.019102,,,,,0,outputs/models/yolo/yolo_best.pt,0ed2182069764ecea56a550627dedfbb
-yolo,,yolo_inference,avg_top1_confidence,0.018558,,,,,0,outputs/models/yolo/yolo_best.pt,7e39f28572ca4c3bae86c7c9df77bb95
-yolo,,yolo_inference,avg_top1_confidence,0.018558,,,,,0,outputs/models/yolo/yolo_best.pt,299027ae2a924c5698a4c3750edc0f5a
-efficientnet,b0,efficientnet_b0,macro_f1,,,,,,,,ae9408d5e28c492f9b15b6184e3cc8c7

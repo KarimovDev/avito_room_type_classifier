@@ -105,6 +105,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Не сохранять веса модели, оставить только JSON с метриками.",
     )
+    parser.add_argument(
+        "--freeze-backbone",
+        action="store_true",
+        help="Заморозить все слои кроме classifier (обучается только голова).",
+    )
     return parser.parse_args()
 
 
@@ -114,6 +119,20 @@ def build_model(variant: str, num_classes: int) -> nn.Module:
     in_features = model.classifier[-1].in_features
     model.classifier[-1] = nn.Linear(in_features, num_classes)
     return model
+
+
+def configure_trainable_layers(model: nn.Module, freeze_backbone: bool) -> None:
+    if not freeze_backbone:
+        return
+
+    for param in model.parameters():
+        param.requires_grad = False
+    for param in model.classifier.parameters():
+        param.requires_grad = True
+
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total = sum(p.numel() for p in model.parameters())
+    print(f"freeze_backbone=True: trainable={trainable:,} / total={total:,} parameters")
 
 
 def get_class_weights(csv_path: Path, target_col: str, num_classes: int, device: torch.device) -> torch.Tensor:
@@ -286,6 +305,7 @@ def main() -> None:
     )
 
     model = build_model(args.variant, args.num_classes).to(device)
+    configure_trainable_layers(model, args.freeze_backbone)
     class_weights = None
     if args.class_balance == "loss":
         class_weights = get_class_weights(args.train_csv, args.target_col, args.num_classes, device)
@@ -293,14 +313,15 @@ def main() -> None:
 
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = torch.optim.AdamW(
-        model.parameters(),
+        filter(lambda p: p.requires_grad, model.parameters()),
         lr=args.learning_rate,
         weight_decay=args.weight_decay,
     )
 
+    run_suffix = "_head" if args.freeze_backbone else ""
     start_mlflow_run(
         "efficientnet",
-        f"efficientnet_{args.variant}",
+        f"efficientnet_{args.variant}{run_suffix}",
         {
             "model": "efficientnet",
             "variant": args.variant,
@@ -314,6 +335,7 @@ def main() -> None:
             "early_stopping_patience": args.early_stopping_patience,
             "early_stopping_min_delta": args.early_stopping_min_delta,
             "lr_scheduler": args.lr_scheduler,
+            "freeze_backbone": args.freeze_backbone,
         },
     )
 
@@ -331,7 +353,8 @@ def main() -> None:
     best_epoch = 0
     best_per_class_f1: list[dict[str, object]] = []
     best_epoch_metrics: dict[str, object] = {}
-    checkpoint_path = args.output_dir / f"efficientnet_{args.variant}_best.pt"
+    checkpoint_name = f"efficientnet_{args.variant}_head_best.pt" if args.freeze_backbone else f"efficientnet_{args.variant}_best.pt"
+    checkpoint_path = args.output_dir / checkpoint_name
     history = []
     epochs_without_improvement = 0
     stop_reason = "max_epochs"
@@ -405,6 +428,7 @@ def main() -> None:
                             "num_classes": args.num_classes,
                             "image_size": args.image_size,
                             "use_weighted_sampling": args.use_weighted_sampling,
+                            "freeze_backbone": args.freeze_backbone,
                             "per_class_f1": best_per_class_f1,
                             "idx_to_class": idx_to_class,
                         },
@@ -463,9 +487,11 @@ def main() -> None:
             "plateau_factor": args.plateau_factor,
             "plateau_min_lr": args.plateau_min_lr,
             "save_checkpoint": not args.no_save_checkpoint,
+            "freeze_backbone": args.freeze_backbone,
         },
     }
-    metrics_path = args.metrics_dir / f"efficientnet_{args.variant}_metrics.json"
+    metrics_name = f"efficientnet_{args.variant}_head_metrics.json" if args.freeze_backbone else f"efficientnet_{args.variant}_metrics.json"
+    metrics_path = args.metrics_dir / metrics_name
     metrics_path.write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding="utf-8")
 
     comparison_path = args.metrics_dir / "model_comparison.csv"
